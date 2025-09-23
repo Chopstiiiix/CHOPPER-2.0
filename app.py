@@ -18,10 +18,10 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key-here-change-in-production")
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///ask_chopper.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:////tmp/ask_chopper.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['UPLOAD_FOLDER'] = '/tmp/uploads'
 
 CORS(app)
 
@@ -283,9 +283,9 @@ def chat_history():
     messages = ChatMessage.query.filter_by(session_id=session_id).order_by(ChatMessage.created_at).all()
     return jsonify([msg.to_dict() for msg in messages])
 
-if __name__ == '__main__':
-    # Create database tables
-    with app.app_context():
-        db.create_all()
+# Create database tables on app startup
+with app.app_context():
+    db.create_all()
 
+if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8000)

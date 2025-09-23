@@ -1,7 +1,7 @@
-openai
-flask
-flask-cors
-python-dotenv
+openai>=1.109.0
+flask>=3.1.0
+flask-cors>=6.0.1
+python-dotenv>=1.1.1
 SQLAlchemy==2.0.23
 Flask-SQLAlchemy==3.1.1
 Flask-Migrate==4.0.5
