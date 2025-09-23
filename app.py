@@ -171,6 +171,11 @@ def generate_response(prompt):
 def index():
     if not session.get('authenticated'):
         return redirect(url_for('login'))
+
+    # Ensure session has a session_id for database tracking
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+
     return render_template('index.html')
 
 @app.route('/login')
@@ -184,6 +189,9 @@ def verify():
     code = request.form.get('code', '')
     if code == VERIFICATION_CODE:
         session['authenticated'] = True
+        # Create a unique session ID for this user session
+        if 'session_id' not in session:
+            session['session_id'] = str(uuid.uuid4())
         return redirect(url_for('index'))
     else:
         return redirect(url_for('login') + '?error=1')

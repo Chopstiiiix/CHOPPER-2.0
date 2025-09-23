@@ -39,3 +39,4 @@ Thumbs.db
 
 # Cache
 .cache_ggshield
+/generated/prisma

@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../instance/ask_chopper.db"
+}
+
+model chat_messages {
+  id                  Int                   @id @default(autoincrement())
+  session_id          String
+  message_type        String
+  content             String
+  formatted_content   String?
+  has_attachments     Boolean?
+  openai_thread_id    String?
+  openai_message_id   String?
+  created_at          DateTime?
+  response_time_ms    Int?
+  message_attachments message_attachments[]
+}
+
+model message_attachments {
+  id                Int           @id @default(autoincrement())
+  message_id        Int
+  filename          String
+  original_filename String
+  file_path         String
+  file_size         Int
+  mime_type         String?
+  thumbnail_path    String?
+  is_processed      Boolean?
+  uploaded_at       DateTime?
+  message           chat_messages @relation(fields: [message_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
