@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Ask Chopper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Söhne", Helvetica, Arial, sans-serif;
+            background: #000000;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            height: 100vh;
+            background: #0d0d0d;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: #000000;
+            color: #ffffff;
+            padding: 16px 24px;
+            border-bottom: 1px solid #2d2d2d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px;
+            background: #0d0d0d;
+            color: #e3e3e3;
+        }
+
+        .content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .content::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 4px;
+        }
+
+        .about-section {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .about-section h2 {
+            color: #ffffff;
+            font-size: 28px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .about-section h3 {
+            color: #ffffff;
+            font-size: 20px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .about-section p {
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: #b8b8b8;
+        }
+
+        .about-section ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 20px;
+        }
+
+        .about-section li {
+            padding: 10px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #b8b8b8;
+            line-height: 1.6;
+        }
+
+        .about-section li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #6e6e6e;
+        }
+
+        .credits {
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .credits h3 {
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .credits p {
+            color: #888888;
+            margin: 0;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #ffffff;
+            color: #000000;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 30px;
+            transition: background-color 0.2s;
+        }
+
+        .back-button:hover {
+            background: #f0f0f0;
+        }
+
+        .burger-menu {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .burger-menu span {
+            display: block;
+            width: 25px;
+            height: 2px;
+            background: #ffffff;
+            margin: 5px 0;
+            transition: 0.3s;
+        }
+
+        .burger-menu.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .burger-menu.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .burger-menu.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        .side-menu {
+            position: fixed;
+            left: -250px;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: #000000;
+            border-right: 1px solid #2d2d2d;
+            transition: left 0.3s;
+            z-index: 999;
+            padding-top: 60px;
+        }
+
+        .side-menu.active {
+            left: 0;
+        }
+
+        .side-menu a {
+            display: block;
+            color: #ffffff;
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 15px;
+            transition: background 0.2s;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .side-menu a:hover {
+            background: #1a1a1a;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 998;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .footer {
+            padding: 12px;
+            background: #000000;
+            border-top: 1px solid #2d2d2d;
+            text-align: center;
+            font-size: 12px;
+            color: #6e6e6e;
+        }
+    </style>
+</head>
+<body>
+    <div class="side-menu" id="sideMenu">
+        <a href="/">Chat</a>
+        <a href="/about">About</a>
+        <a href="/logout" style="margin-top: auto; border-top: 1px solid #2d2d2d;">Logout</a>
+    </div>
+    <div class="overlay" id="overlay"></div>
+    <div class="container">
+        <div class="header">
+            <div class="burger-menu" id="burgerMenu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <h1>About Ask Chopper</h1>
+        </div>
+        <div class="content">
+            <div class="about-section">
+                <h2>Welcome to Ask Chopper</h2>
+                <p>
+                    Ask Chopper is your AI-powered assistant, designed to help you with a wide range of tasks and questions.
+                    Built with cutting-edge OpenAI technology, Chopper is here to provide intelligent, helpful, and engaging conversations.
+                </p>
+
+                <h3>Features</h3>
+                <ul>
+                    <li>Intelligent conversation powered by OpenAI's Assistant API</li>
+                    <li>Clean, modern interface inspired by OpenAI's design philosophy</li>
+                    <li>Real-time responses with typing indicators</li>
+                    <li>Dark mode for comfortable extended use</li>
+                    <li>Responsive design that works on all devices</li>
+                </ul>
+
+                <h3>How to Use</h3>
+                <p>
+                    Simply type your question or request in the chat input field and press Enter or click Send.
+                    Chopper will process your message and provide a thoughtful, helpful response. You can ask about
+                    anything from technical questions to creative tasks.
+                </p>
+
+                <h3>Technology Stack</h3>
+                <ul>
+                    <li>OpenAI Assistant API for intelligent responses</li>
+                    <li>Flask web framework for the backend</li>
+                    <li>Modern HTML5, CSS3, and JavaScript for the frontend</li>
+                    <li>Python for server-side processing</li>
+                </ul>
+
+                <div class="credits">
+                    <h3>Credits</h3>
+                    <p>Designed & Built by Chopstix and Lee</p>
+                    <p style="margin-top: 10px; font-size: 11px;">Powered by OpenAI</p>
+                </div>
+
+                <a href="/" class="back-button">Back to Chat</a>
+            </div>
+        </div>
+        <div class="footer">
+            Designed & Built by Chopstix and Lee
+        </div>
+    </div>
+
+    <script>
+        const burgerMenu = document.getElementById('burgerMenu');
+        const sideMenu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('overlay');
+
+        // Burger menu functionality
+        burgerMenu.addEventListener('click', () => {
+            burgerMenu.classList.toggle('active');
+            sideMenu.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            burgerMenu.classList.remove('active');
+            sideMenu.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask Chopper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Söhne", Helvetica, Arial, sans-serif;
+            background: #000000;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            height: 100vh;
+            background: #0d0d0d;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: #000000;
+            color: #ffffff;
+            padding: 16px 24px;
+            border-bottom: 1px solid #2d2d2d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: #0d0d0d;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 4px;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: #5a5a5a;
+        }
+
+        .message {
+            margin-bottom: 24px;
+            display: flex;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+
+        .user .message-content {
+            background: #2f2f2f;
+            color: #ffffff;
+            border: 1px solid #3a3a3a;
+        }
+
+        .assistant .message-content {
+            background: #1a1a1a;
+            color: #e3e3e3;
+            border: 1px solid #2d2d2d;
+        }
+
+        .message-label {
+            font-size: 12px;
+            color: #888888;
+            margin-bottom: 6px;
+            padding: 0 16px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-container {
+            padding: 16px 24px 24px;
+            background: #000000;
+            border-top: 1px solid #2d2d2d;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 14px 18px;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            font-size: 15px;
+            color: #ffffff;
+            outline: none;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        #messageInput::placeholder {
+            color: #6e6e6e;
+        }
+
+        #messageInput:focus {
+            border-color: #4a4a4a;
+            background: #0d0d0d;
+        }
+
+        #sendButton {
+            padding: 14px 24px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, opacity 0.2s;
+            min-width: 80px;
+        }
+
+        #sendButton:hover {
+            background: #f0f0f0;
+        }
+
+        #sendButton:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #4a4a4a;
+            color: #1a1a1a;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            max-width: 80px;
+        }
+
+        .typing-indicator.show {
+            display: inline-block;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #6e6e6e;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #888888;
+            padding: 60px 40px;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .welcome-message br {
+            margin-bottom: 8px;
+        }
+
+        .footer {
+            padding: 12px;
+            background: #000000;
+            border-top: 1px solid #2d2d2d;
+            text-align: center;
+            font-size: 12px;
+            color: #6e6e6e;
+        }
+
+        .burger-menu {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .burger-menu span {
+            display: block;
+            width: 25px;
+            height: 2px;
+            background: #ffffff;
+            margin: 5px 0;
+            transition: 0.3s;
+        }
+
+        .burger-menu.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .burger-menu.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .burger-menu.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        .side-menu {
+            position: fixed;
+            left: -250px;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: #000000;
+            border-right: 1px solid #2d2d2d;
+            transition: left 0.3s;
+            z-index: 999;
+            padding-top: 60px;
+        }
+
+        .side-menu.active {
+            left: 0;
+        }
+
+        .side-menu a {
+            display: block;
+            color: #ffffff;
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 15px;
+            transition: background 0.2s;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .side-menu a:hover {
+            background: #1a1a1a;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 998;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="side-menu" id="sideMenu">
+        <a href="/">Chat</a>
+        <a href="/about">About</a>
+        <a href="/logout" style="margin-top: auto; border-top: 1px solid #2d2d2d;">Logout</a>
+    </div>
+    <div class="overlay" id="overlay"></div>
+    <div class="container">
+        <div class="header">
+            <div class="burger-menu" id="burgerMenu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <h1>Ask Chopper</h1>
+        </div>
+        <div class="chat-container" id="chatContainer">
+            <div class="welcome-message">
+                Welcome to Ask Chopper!<br>
+                How can I help you today?
+            </div>
+        </div>
+        <div class="typing-indicator" id="typingIndicator">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="input-container">
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="Type your message here..."
+                autofocus
+            />
+            <button id="sendButton">Send</button>
+        </div>
+        <div class="footer">
+            Designed & Built by Chopstix and Lee
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const burgerMenu = document.getElementById('burgerMenu');
+        const sideMenu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('overlay');
+        let isFirstMessage = true;
+
+        // Burger menu functionality
+        burgerMenu.addEventListener('click', () => {
+            burgerMenu.classList.toggle('active');
+            sideMenu.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            burgerMenu.classList.remove('active');
+            sideMenu.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        function addMessage(content, isUser) {
+            if (isFirstMessage) {
+                const welcomeMessage = chatContainer.querySelector('.welcome-message');
+                if (welcomeMessage) {
+                    welcomeMessage.remove();
+                }
+                isFirstMessage = false;
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+
+            const messageContent = document.createElement('div');
+            messageContent.innerHTML = `
+                <div class="message-label">${isUser ? 'You' : 'Chopper'}</div>
+                <div class="message-content">${escapeHtml(content)}</div>
+            `;
+
+            messageDiv.appendChild(messageContent);
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showTyping() {
+            typingIndicator.classList.add('show');
+            chatContainer.appendChild(typingIndicator);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function hideTyping() {
+            typingIndicator.classList.remove('show');
+            if (typingIndicator.parentNode) {
+                typingIndicator.parentNode.removeChild(typingIndicator);
+            }
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addMessage(message, true);
+            messageInput.value = '';
+
+            // Disable input while processing
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+
+            // Show typing indicator
+            showTyping();
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    addMessage(data.response, false);
+                } else {
+                    addMessage('Error: ' + (data.error || 'Unknown error occurred'), false);
+                }
+            } catch (error) {
+                addMessage('Error: Failed to connect to the server. ' + error.message, false);
+            } finally {
+                hideTyping();
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Focus on input when page loads
+        window.addEventListener('load', () => {
+            messageInput.focus();
+        });
+    </script>
+</body>
+</html>

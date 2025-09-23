@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask Chopper - Verification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Söhne", Helvetica, Arial, sans-serif;
+            background: #000000;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .cover-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+            text-align: center;
+            animation: fadeIn 1s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            margin-bottom: 60px;
+        }
+
+        .logo h1 {
+            font-size: 48px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #ffffff 0%, #888888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo .tagline {
+            font-size: 14px;
+            color: #6e6e6e;
+            letter-spacing: 1px;
+        }
+
+        .verification-box {
+            background: #0d0d0d;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .verification-box h2 {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .verification-input {
+            width: 100%;
+            padding: 16px;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #ffffff;
+            text-align: center;
+            letter-spacing: 2px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .verification-input::placeholder {
+            color: #4a4a4a;
+            letter-spacing: normal;
+        }
+
+        .verification-input:focus {
+            border-color: #4a4a4a;
+            background: #0d0d0d;
+        }
+
+        .error-message {
+            color: #ff4444;
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .verify-button {
+            width: 100%;
+            padding: 16px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .verify-button:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .verify-button:active {
+            transform: translateY(0);
+        }
+
+        .verify-button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #4a4a4a;
+            color: #1a1a1a;
+        }
+
+        .footer-text {
+            color: #4a4a4a;
+            font-size: 12px;
+            margin-top: 40px;
+        }
+
+        .loading {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #2d2d2d;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            from {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    <div class="cover-container">
+        <div class="logo">
+            <h1>Ask Chopper</h1>
+            <div class="tagline">AI-Powered Assistant</div>
+        </div>
+
+        <div class="verification-box">
+            <h2>Enter Verification Code</h2>
+            <form id="verifyForm" method="POST" action="/verify">
+                <div class="input-group">
+                    <input
+                        type="text"
+                        id="verificationCode"
+                        name="code"
+                        class="verification-input"
+                        placeholder="Enter code"
+                        maxlength="10"
+                        autocomplete="off"
+                        required
+                    />
+                    <div class="error-message" id="errorMessage">
+                        Invalid verification code. Please try again.
+                    </div>
+                </div>
+                <button type="submit" class="verify-button" id="verifyButton">
+                    <span id="buttonText">Verify Access</span>
+                    <div class="loading" id="loading"></div>
+                </button>
+            </form>
+        </div>
+
+        <div class="footer-text">
+            Designed & Built by Chopstix and Lee
+        </div>
+    </div>
+
+    <script>
+        // Generate particles
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+            particlesContainer.appendChild(particle);
+        }
+
+        // Form handling
+        const form = document.getElementById('verifyForm');
+        const input = document.getElementById('verificationCode');
+        const button = document.getElementById('verifyButton');
+        const buttonText = document.getElementById('buttonText');
+        const loading = document.getElementById('loading');
+        const errorMessage = document.getElementById('errorMessage');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Clear previous error
+            errorMessage.classList.remove('show');
+
+            // Show loading
+            buttonText.style.display = 'none';
+            loading.classList.add('show');
+            button.disabled = true;
+
+            // Submit form
+            setTimeout(() => {
+                form.submit();
+            }, 500);
+        });
+
+        // Check for error in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('error') === '1') {
+            errorMessage.classList.add('show');
+            input.focus();
+        }
+
+        // Auto-focus on input
+        window.addEventListener('load', () => {
+            input.focus();
+        });
+    </script>
+</body>
+</html>
