@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from functools import wraps
 from werkzeug.utils import secure_filename
 from PIL import Image
-from models import db, ChatMessage, MessageAttachment, User
+from models import db, ChatMessage, MessageAttachment, User, Feedback
 
 load_dotenv()
 
@@ -299,6 +299,56 @@ def logout():
 @login_required
 def about():
     return render_template('about.html')
+
+@app.route('/feedback', methods=['GET', 'POST'])
+@login_required
+def feedback():
+    if request.method == 'POST':
+        try:
+            # Get form data
+            feedback_data = Feedback(
+                user_id=session.get('user_id'),
+
+                # Onboarding & First Impressions
+                understand_clarity=request.form.get('understand_clarity', type=int),
+                start_ease=request.form.get('start_ease', type=int),
+                confusion_text=request.form.get('confusion_text', '').strip(),
+
+                # User Experience & Interface
+                design_rating=request.form.get('design_rating', type=int),
+                device_issues=request.form.get('device_issues', ''),
+                device_issues_text=request.form.get('device_issues_text', '').strip(),
+                interface_improvement=request.form.get('interface_improvement', '').strip(),
+
+                # Quality of Answers & Music Help
+                answers_helpful=request.form.get('answers_helpful', type=int),
+                answers_tailored=request.form.get('answers_tailored', ''),
+                music_help_wanted=','.join(request.form.getlist('music_help_wanted')),
+
+                # Speed, Reliability & Technical Performance
+                response_speed=request.form.get('response_speed', type=int),
+                bugs_experienced=request.form.get('bugs_experienced', ''),
+                bugs_text=request.form.get('bugs_text', '').strip(),
+                slow_timing=','.join(request.form.getlist('slow_timing')),
+
+                # Overall Value, Features & Future Ideas
+                use_again_likelihood=request.form.get('use_again_likelihood', type=int),
+                recommend_likelihood=request.form.get('recommend_likelihood', type=int),
+                top_feature_request=request.form.get('top_feature_request', '').strip(),
+                additional_comments=request.form.get('additional_comments', '').strip()
+            )
+
+            db.session.add(feedback_data)
+            db.session.commit()
+
+            return render_template('feedback.html', success=True)
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"Feedback submission error: {e}")
+            return render_template('feedback.html', error='An error occurred. Please try again.')
+
+    return render_template('feedback.html')
 
 @app.route('/chat', methods=['POST'])
 @login_required

@@ -107,3 +107,64 @@ class MessageAttachment(db.Model):
                 os.remove(self.thumbnail_path)
         except Exception as e:
             print(f"Error deleting files: {e}")
+
+class Feedback(db.Model):
+    __tablename__ = 'feedback'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+    # Onboarding & First Impressions
+    understand_clarity = db.Column(db.Integer)  # 1-5 scale
+    start_ease = db.Column(db.Integer)  # 1-5 scale
+    confusion_text = db.Column(db.Text)
+
+    # User Experience & Interface
+    design_rating = db.Column(db.Integer)  # 1-5 scale
+    device_issues = db.Column(db.String(10))  # 'yes' or 'no'
+    device_issues_text = db.Column(db.Text)
+    interface_improvement = db.Column(db.Text)
+
+    # Quality of Answers & Music Help
+    answers_helpful = db.Column(db.Integer)  # 1-5 scale
+    answers_tailored = db.Column(db.String(20))  # never/sometimes/often/always
+    music_help_wanted = db.Column(db.Text)  # comma-separated or text
+
+    # Speed, Reliability & Technical Performance
+    response_speed = db.Column(db.Integer)  # 1-5 scale
+    bugs_experienced = db.Column(db.String(10))  # 'yes' or 'no'
+    bugs_text = db.Column(db.Text)
+    slow_timing = db.Column(db.Text)  # comma-separated options
+
+    # Overall Value, Features & Future Ideas
+    use_again_likelihood = db.Column(db.Integer)  # 0-10 scale
+    recommend_likelihood = db.Column(db.Integer)  # 0-10 scale
+    top_feature_request = db.Column(db.Text)
+    additional_comments = db.Column(db.Text)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'understand_clarity': self.understand_clarity,
+            'start_ease': self.start_ease,
+            'confusion_text': self.confusion_text,
+            'design_rating': self.design_rating,
+            'device_issues': self.device_issues,
+            'device_issues_text': self.device_issues_text,
+            'interface_improvement': self.interface_improvement,
+            'answers_helpful': self.answers_helpful,
+            'answers_tailored': self.answers_tailored,
+            'music_help_wanted': self.music_help_wanted,
+            'response_speed': self.response_speed,
+            'bugs_experienced': self.bugs_experienced,
+            'bugs_text': self.bugs_text,
+            'slow_timing': self.slow_timing,
+            'use_again_likelihood': self.use_again_likelihood,
+            'recommend_likelihood': self.recommend_likelihood,
+            'top_feature_request': self.top_feature_request,
+            'additional_comments': self.additional_comments,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }

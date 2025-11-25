@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback - Ask Chopper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Söhne", Helvetica, Arial, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #ffffff, #999999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #999999;
+            font-size: 1.1rem;
+        }
+
+        .success-message {
+            background: rgba(52, 211, 153, 0.1);
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            color: #34d399;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .error-message {
+            background: rgba(255, 77, 77, 0.1);
+            border: 1px solid rgba(255, 77, 77, 0.3);
+            color: #ff4d4d;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .section {
+            background: #0d0d0d;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #2d2d2d;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #ffffff;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2d2d2d;
+        }
+
+        .question {
+            margin-bottom: 30px;
+        }
+
+        .question:last-child {
+            margin-bottom: 0;
+        }
+
+        .question-text {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: #cccccc;
+            line-height: 1.5;
+        }
+
+        /* Radio Scale Styling */
+        .scale-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .scale-label {
+            font-size: 0.9rem;
+            color: #666666;
+            flex: 0 0 auto;
+        }
+
+        .scale-options {
+            display: flex;
+            gap: 15px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .scale-option {
+            position: relative;
+        }
+
+        .scale-option input[type="radio"] {
+            opacity: 0;
+            position: absolute;
+        }
+
+        .scale-option label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border: 2px solid #2d2d2d;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #1a1a1a;
+            color: #999999;
+            font-weight: 600;
+        }
+
+        .scale-option input[type="radio"]:checked + label {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+            transform: scale(1.1);
+        }
+
+        .scale-option label:hover {
+            border-color: #666666;
+        }
+
+        /* Textarea Styling */
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 15px;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #ffffff;
+            background: #222222;
+        }
+
+        /* Radio Yes/No */
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .radio-option {
+            position: relative;
+        }
+
+        .radio-option input[type="radio"] {
+            opacity: 0;
+            position: absolute;
+        }
+
+        .radio-option label {
+            padding: 10px 25px;
+            border: 2px solid #2d2d2d;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #1a1a1a;
+            display: block;
+        }
+
+        .radio-option input[type="radio"]:checked + label {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+        }
+
+        .radio-option label:hover {
+            border-color: #666666;
+        }
+
+        /* Checkboxes */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .checkbox-option {
+            position: relative;
+        }
+
+        .checkbox-option input[type="checkbox"] {
+            opacity: 0;
+            position: absolute;
+        }
+
+        .checkbox-option label {
+            padding: 12px 20px;
+            border: 2px solid #2d2d2d;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #1a1a1a;
+            display: block;
+        }
+
+        .checkbox-option input[type="checkbox"]:checked + label {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+        }
+
+        .checkbox-option label:hover {
+            border-color: #666666;
+        }
+
+        /* Submit Button */
+        .submit-button {
+            width: 100%;
+            padding: 18px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .submit-button:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .back-link a {
+            color: #666666;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .back-link a:hover {
+            color: #999999;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .scale-options {
+                gap: 8px;
+            }
+
+            .scale-option label {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>We Value Your Feedback</h1>
+            <p>Help us improve Ask Chopper for your music journey</p>
+        </div>
+
+        {% if success %}
+        <div class="success-message">
+            Thank you for your feedback! Your input helps us make Ask Chopper better for everyone.
+        </div>
+        <div class="back-link">
+            <a href="/app">← Back to Chat</a>
+        </div>
+        {% elif error %}
+        <div class="error-message">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        {% if not success %}
+        <form method="POST" action="/feedback">
+            <!-- Section 1: Onboarding & First Impressions -->
+            <div class="section">
+                <h2 class="section-title">1. Onboarding & First Impressions</h2>
+
+                <div class="question">
+                    <p class="question-text">How easy was it to understand what Ask Chopper does when you first opened the app?</p>
+                    <div class="scale-container">
+                        <span class="scale-label">Very confusing</span>
+                        <div class="scale-options">
+                            <div class="scale-option">
+                                <input type="radio" name="understand_clarity" value="1" id="clarity1" required>
+                                <label for="clarity1">1</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="understand_clarity" value="2" id="clarity2">
+                                <label for="clarity2">2</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="understand_clarity" value="3" id="clarity3">
+                                <label for="clarity3">3</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="understand_clarity" value="4" id="clarity4">
+                                <label for="clarity4">4</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="understand_clarity" value="5" id="clarity5">
+                                <label for="clarity5">5</label>
+                            </div>
+                        </div>
+                        <span class="scale-label">Very clear</span>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">How easy was it to start your first conversation with Ask Chopper?</p>
+                    <div class="scale-container">
+                        <span class="scale-label">Very difficult</span>
+                        <div class="scale-options">
+                            <div class="scale-option">
+                                <input type="radio" name="start_ease" value="1" id="ease1" required>
+                                <label for="ease1">1</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="start_ease" value="2" id="ease2">
+                                <label for="ease2">2</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="start_ease" value="3" id="ease3">
+                                <label for="ease3">3</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="start_ease" value="4" id="ease4">
+                                <label for="ease4">4</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="start_ease" value="5" id="ease5">
+                                <label for="ease5">5</label>
+                            </div>
+                        </div>
+                        <span class="scale-label">Very easy</span>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">What (if anything) confused you when you first used Ask Chopper?</p>
+                    <textarea name="confusion_text" placeholder="Tell us what was confusing..."></textarea>
+                </div>
+            </div>
+
+            <!-- Section 2: User Experience & Interface -->
+            <div class="section">
+                <h2 class="section-title">2. User Experience & Interface</h2>
+
+                <div class="question">
+                    <p class="question-text">How would you rate the overall design and layout of Ask Chopper?</p>
+                    <div class="scale-container">
+                        <span class="scale-label">Very poor</span>
+                        <div class="scale-options">
+                            <div class="scale-option">
+                                <input type="radio" name="design_rating" value="1" id="design1" required>
+                                <label for="design1">1</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="design_rating" value="2" id="design2">
+                                <label for="design2">2</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="design_rating" value="3" id="design3">
+                                <label for="design3">3</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="design_rating" value="4" id="design4">
+                                <label for="design4">4</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="design_rating" value="5" id="design5">
+                                <label for="design5">5</label>
+                            </div>
+                        </div>
+                        <span class="scale-label">Excellent</span>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">Did you have any issues using Ask Chopper on your device?</p>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" name="device_issues" value="yes" id="issues_yes" required>
+                            <label for="issues_yes">Yes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="device_issues" value="no" id="issues_no">
+                            <label for="issues_no">No</label>
+                        </div>
+                    </div>
+                    <textarea name="device_issues_text" placeholder="If yes, please describe the issues..." style="margin-top: 15px;"></textarea>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">What's one thing about the interface that you'd like us to improve?</p>
+                    <textarea name="interface_improvement" placeholder="Your suggestions..."></textarea>
+                </div>
+            </div>
+
+            <!-- Section 3: Quality of Answers & Music Help -->
+            <div class="section">
+                <h2 class="section-title">3. Quality of Answers & Music Help</h2>
+
+                <div class="question">
+                    <p class="question-text">How helpful are Ask Chopper's answers for your music journey (learning, producing, writing, etc.)?</p>
+                    <div class="scale-container">
+                        <span class="scale-label">Not helpful at all</span>
+                        <div class="scale-options">
+                            <div class="scale-option">
+                                <input type="radio" name="answers_helpful" value="1" id="helpful1" required>
+                                <label for="helpful1">1</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="answers_helpful" value="2" id="helpful2">
+                                <label for="helpful2">2</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="answers_helpful" value="3" id="helpful3">
+                                <label for="helpful3">3</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="answers_helpful" value="4" id="helpful4">
+                                <label for="helpful4">4</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="answers_helpful" value="5" id="helpful5">
+                                <label for="helpful5">5</label>
+                            </div>
+                        </div>
+                        <span class="scale-label">Extremely helpful</span>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">Do the answers feel tailored to your level (beginner, intermediate, advanced)?</p>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" name="answers_tailored" value="never" id="tailored_never" required>
+                            <label for="tailored_never">Never</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="answers_tailored" value="sometimes" id="tailored_sometimes">
+                            <label for="tailored_sometimes">Sometimes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="answers_tailored" value="often" id="tailored_often">
+                            <label for="tailored_often">Often</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="answers_tailored" value="always" id="tailored_always">
+                            <label for="tailored_always">Always</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">What kind of music help do you want more of?</p>
+                    <div class="checkbox-group">
+                        <div class="checkbox-option">
+                            <input type="checkbox" name="music_help_wanted" value="theory" id="help_theory">
+                            <label for="help_theory">Music Theory</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" name="music_help_wanted" value="songwriting" id="help_songwriting">
+                            <label for="help_songwriting">Songwriting</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" name="music_help_wanted" value="beats" id="help_beats">
+                            <label for="help_beats">Beat Ideas</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" name="music_help_wanted" value="mixing" id="help_mixing">
+                            <label for="help_mixing">Mixing Tips</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" name="music_help_wanted" value="career" id="help_career">
+                            <label for="help_career">Career Advice</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Speed, Reliability & Technical Performance -->
+            <div class="section">
+                <h2 class="section-title">4. Speed, Reliability & Technical Performance</h2>
+
+                <div class="question">
+                    <p class="question-text">How satisfied are you with the response speed of Ask Chopper?</p>
+                    <div class="scale-container">
+                        <span class="scale-label">Very slow</span>
+                        <div class="scale-options">
+                            <div class="scale-option">
+                                <input type="radio" name="response_speed" value="1" id="speed1" required>
+                                <label for="speed1">1</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="response_speed" value="2" id="speed2">
+                                <label for="speed2">2</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="response_speed" value="3" id="speed3">
+                                <label for="speed3">3</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="response_speed" value="4" id="speed4">
+                                <label for="speed4">4</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="response_speed" value="5" id="speed5">
+                                <label for="speed5">5</label>
+                            </div>
+                        </div>
+                        <span class="scale-label">Very fast</span>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">Have you experienced any bugs, errors, or crashes?</p>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" name="bugs_experienced" value="yes" id="bugs_yes" required>
+                            <label for="bugs_yes">Yes</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="bugs_experienced" value="no" id="bugs_no">
+                            <label for="bugs_no">No</label>
+                        </div>
+                    </div>
+                    <textarea name="bugs_text" placeholder="If yes, please describe..." style="margin-top: 15px;"></textarea>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">If the app felt slow or glitchy, when did it usually happen?</p>
+                    <div class="checkbox-group">
+                        <div class="checkbox-option">
+                            <input type="checkbox" name="slow_timing" value="loading" id="slow_loading">
+                            <label for="slow_loading">Loading the page</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" name="slow_timing" value="sending" id="slow_sending">
+                            <label for="slow_sending">Sending a question</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" name="slow_timing" value="response" id="slow_response">
+                            <label for="slow_response">Getting a response</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" name="slow_timing" value="other" id="slow_other">
+                            <label for="slow_other">Other</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: Overall Value, Features & Future Ideas -->
+            <div class="section">
+                <h2 class="section-title">5. Overall Value, Features & Future Ideas</h2>
+
+                <div class="question">
+                    <p class="question-text">How likely are you to use Ask Chopper again?</p>
+                    <div class="scale-container">
+                        <span class="scale-label">0 (Not at all)</span>
+                        <div class="scale-options">
+                            <div class="scale-option">
+                                <input type="radio" name="use_again_likelihood" value="0" id="use0" required>
+                                <label for="use0">0</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="use_again_likelihood" value="2" id="use2">
+                                <label for="use2">2</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="use_again_likelihood" value="4" id="use4">
+                                <label for="use4">4</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="use_again_likelihood" value="6" id="use6">
+                                <label for="use6">6</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="use_again_likelihood" value="8" id="use8">
+                                <label for="use8">8</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="use_again_likelihood" value="10" id="use10">
+                                <label for="use10">10</label>
+                            </div>
+                        </div>
+                        <span class="scale-label">10 (Extremely)</span>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">How likely are you to recommend Ask Chopper to another artist/producer?</p>
+                    <div class="scale-container">
+                        <span class="scale-label">0 (Not at all)</span>
+                        <div class="scale-options">
+                            <div class="scale-option">
+                                <input type="radio" name="recommend_likelihood" value="0" id="rec0" required>
+                                <label for="rec0">0</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="recommend_likelihood" value="2" id="rec2">
+                                <label for="rec2">2</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="recommend_likelihood" value="4" id="rec4">
+                                <label for="rec4">4</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="recommend_likelihood" value="6" id="rec6">
+                                <label for="rec6">6</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="recommend_likelihood" value="8" id="rec8">
+                                <label for="rec8">8</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" name="recommend_likelihood" value="10" id="rec10">
+                                <label for="rec10">10</label>
+                            </div>
+                        </div>
+                        <span class="scale-label">10 (Extremely)</span>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">What's the #1 feature you wish Ask Chopper had?</p>
+                    <textarea name="top_feature_request" placeholder="Your top feature request..."></textarea>
+                </div>
+
+                <div class="question">
+                    <p class="question-text">Anything else we should know to make Ask Chopper better for you?</p>
+                    <textarea name="additional_comments" placeholder="Any additional thoughts..."></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button">Submit Feedback</button>
+        </form>
+
+        <div class="back-link">
+            <a href="/app">← Back to Chat</a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
