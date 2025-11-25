@@ -5,7 +5,20 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:../instance/ask_chopper.db"
+  url      = "file:/tmp/ask_chopper.db"
+}
+
+model users {
+  id            Int        @id @default(autoincrement())
+  first_name    String
+  surname       String
+  email         String     @unique(map: "sqlite_autoindex_users_1")
+  phone_number  String
+  age           Int
+  password_hash String
+  created_at    DateTime?
+  last_login    DateTime?
+  feedback      feedback[]
 }
 
 model chat_messages {
@@ -34,4 +47,29 @@ model message_attachments {
   is_processed      Boolean?
   uploaded_at       DateTime?
   message           chat_messages @relation(fields: [message_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model feedback {
+  id                    Int       @id @default(autoincrement())
+  user_id               Int?
+  understand_clarity    Int?
+  start_ease            Int?
+  confusion_text        String?
+  design_rating         Int?
+  device_issues         String?
+  device_issues_text    String?
+  interface_improvement String?
+  answers_helpful       Int?
+  answers_tailored      String?
+  music_help_wanted     String?
+  response_speed        Int?
+  bugs_experienced      String?
+  bugs_text             String?
+  slow_timing           String?
+  use_again_likelihood  Int?
+  recommend_likelihood  Int?
+  top_feature_request   String?
+  additional_comments   String?
+  created_at            DateTime?
+  user                  users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
