@@ -527,6 +527,115 @@
         .overlay.active {
             display: block;
         }
+
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .mode-toggle label {
+            color: #888888;
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .mode-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #2a2a2a;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .mode-switch.active {
+            background: #4a9eff;
+        }
+
+        .mode-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: #ffffff;
+            border-radius: 50%;
+            transition: left 0.3s;
+        }
+
+        .mode-switch.active::after {
+            left: 22px;
+        }
+
+        .mode-label {
+            color: #e3e3e3;
+            font-weight: 600;
+        }
+
+        .citations {
+            margin-top: 12px;
+            padding: 12px;
+            background: #2a2a2a;
+            border-left: 3px solid #4a9eff;
+            border-radius: 4px;
+        }
+
+        .citations-title {
+            font-size: 12px;
+            color: #888888;
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .citation-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .citation-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .citation-icon {
+            color: #4a9eff;
+            font-size: 14px;
+        }
+
+        .citation-name {
+            color: #e3e3e3;
+            flex: 1;
+        }
+
+        .document-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: #4a9eff;
+            color: #ffffff;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
     </style>
 </head>
 <body>
@@ -575,6 +684,11 @@
                 </svg>
             </div>
             <div class="input-wrapper">
+                <div class="mode-toggle">
+                    <label for="documentMode">Document RAG</label>
+                    <div class="mode-switch" id="modeSwitch"></div>
+                    <span class="mode-label" id="modeLabel">Off</span>
+                </div>
                 <div class="attachment-preview" id="attachmentPreview"></div>
                 <textarea
                     id="messageInput"
@@ -600,8 +714,11 @@
         const overlay = document.getElementById('overlay');
         const fileInput = document.getElementById('fileInput');
         const attachmentPreview = document.getElementById('attachmentPreview');
+        const modeSwitch = document.getElementById('modeSwitch');
+        const modeLabel = document.getElementById('modeLabel');
         let isFirstMessage = true;
         let selectedFiles = [];
+        let documentMode = false;
 
         // Burger menu functionality
         burgerMenu.addEventListener('click', () => {
@@ -625,7 +742,19 @@
             beatPaxSubmenu.classList.toggle('open');
         });
 
-        function addMessage(content, isUser) {
+        // Document mode toggle
+        modeSwitch.addEventListener('click', () => {
+            documentMode = !documentMode;
+            modeSwitch.classList.toggle('active');
+            modeLabel.textContent = documentMode ? 'On' : 'Off';
+
+            // Update placeholder text
+            messageInput.placeholder = documentMode
+                ? 'Ask questions about your documents...'
+                : 'Type your message here...';
+        });
+
+        function addMessage(content, isUser, citations = null, hasDocContext = false) {
             if (isFirstMessage) {
                 const welcomeMessage = chatContainer.querySelector('.welcome-message');
                 if (welcomeMessage) {
@@ -638,11 +767,31 @@
             messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
 
             const messageContent = document.createElement('div');
-            messageContent.innerHTML = `
-                <div class="message-label">${isUser ? 'You' : 'Chopper'}</div>
-                <div class="message-content">${isUser ? escapeHtml(content) : formatText(content)}</div>
-            `;
+            let messageHTML = `<div class="message-label">${isUser ? 'You' : 'Chopper'}</div>`;
 
+            // Add document indicator for assistant messages with document context
+            if (!isUser && hasDocContext) {
+                messageHTML += `<div class="document-indicator">📄 Document Context</div>`;
+            }
+
+            messageHTML += `<div class="message-content">${isUser ? escapeHtml(content) : formatText(content)}</div>`;
+
+            // Add citations if available
+            if (!isUser && citations && citations.length > 0) {
+                messageHTML += `<div class="citations">`;
+                messageHTML += `<div class="citations-title">Sources</div>`;
+                citations.forEach(citation => {
+                    messageHTML += `
+                        <div class="citation-item">
+                            <span class="citation-icon">📄</span>
+                            <span class="citation-name">${escapeHtml(citation.file_name)}</span>
+                        </div>
+                    `;
+                });
+                messageHTML += `</div>`;
+            }
+
+            messageContent.innerHTML = messageHTML;
             messageDiv.appendChild(messageContent);
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -721,6 +870,9 @@
             const message = messageInput.value.trim();
             if (!message && selectedFiles.length === 0) return;
 
+            // Determine which endpoint to use
+            const endpoint = documentMode ? '/chat-with-document' : '/chat';
+
             // Create FormData for file upload
             const formData = new FormData();
             formData.append('message', message);
@@ -747,7 +899,7 @@
             showTyping();
 
             try {
-                const response = await fetch('/chat', {
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     body: formData
                 });
@@ -755,7 +907,12 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    addMessage(data.response, false);
+                    // Handle document mode response with citations
+                    if (documentMode && data.citations) {
+                        addMessage(data.response, false, data.citations, data.has_document_context);
+                    } else {
+                        addMessage(data.response, false);
+                    }
                 } else {
                     addMessage('Error: ' + (data.error || 'Unknown error occurred'), false);
                 }

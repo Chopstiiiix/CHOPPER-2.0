@@ -42,6 +42,10 @@ migrate = Migrate(app, db)
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+# Assistant and Vector Store configuration
+ASSISTANT_ID = os.environ.get("OPENAI_ASSISTANT_ID")
+VECTOR_STORE_ID = os.environ.get("OPENAI_VECTOR_STORE_ID")
+
 # Verification code
 VERIFICATION_CODE = "1234567890"
 
@@ -130,6 +134,113 @@ def process_uploaded_file(file, message_id):
     except Exception as e:
         print(f"Error processing file {file.filename}: {e}")
         return None
+
+# =============================================================================
+# Document RAG Helper Functions
+# =============================================================================
+
+def allowed_document_file(filename):
+    """Check if document file type is allowed for RAG"""
+    ALLOWED_DOC_EXTENSIONS = {
+        'pdf', 'txt', 'md', 'doc', 'docx',
+        'py', 'js', 'json', 'csv', 'xml', 'html', 'css'
+    }
+    if '.' not in filename:
+        return False
+    ext = filename.rsplit('.', 1)[1].lower()
+    return ext in ALLOWED_DOC_EXTENSIONS
+
+def get_or_create_thread(session_id):
+    """Get existing thread ID or create new one for session"""
+    try:
+        # Check database for existing thread
+        last_message = ChatMessage.query.filter_by(
+            session_id=session_id
+        ).order_by(ChatMessage.created_at.desc()).first()
+
+        if last_message and last_message.thread_id:
+            return last_message.thread_id
+
+        # Create new thread
+        thread = client.beta.threads.create()
+        return thread.id
+    except Exception as e:
+        print(f"Error getting/creating thread: {e}")
+        return None
+
+def save_document_upload(user_id, session_id, file, openai_file_id):
+    """Save document upload record to database"""
+    try:
+        filename = generate_unique_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'documents', filename)
+
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        # Save file
+        file.save(file_path)
+
+        # Get file info
+        file_size = os.path.getsize(file_path)
+        mime_type = file.content_type or mimetypes.guess_type(file_path)[0]
+
+        # Create database record
+        doc = DocumentUpload(
+            user_id=user_id,
+            session_id=session_id,
+            filename=filename,
+            original_filename=file.filename,
+            file_size=file_size,
+            mime_type=mime_type,
+            openai_file_id=openai_file_id,
+            vector_store_id=VECTOR_STORE_ID,
+            file_path=file_path
+        )
+        db.session.add(doc)
+        db.session.commit()
+
+        return doc
+    except Exception as e:
+        print(f"Error saving document upload: {e}")
+        db.session.rollback()
+        return None
+
+def process_assistant_response(messages_data):
+    """Process assistant response and handle citations"""
+    try:
+        assistant_message = messages_data.data[0]
+        content = assistant_message.content[0].text
+        response_text = content.value
+
+        # Handle citations
+        annotations = content.annotations
+        citations = []
+
+        for annotation in annotations:
+            if annotation.type == 'file_citation':
+                citation = annotation.file_citation
+                try:
+                    cited_file = client.files.retrieve(citation.file_id)
+                    file_name = cited_file.filename
+                    # Replace annotation with reference
+                    response_text = response_text.replace(
+                        annotation.text,
+                        f" [{file_name}]"
+                    )
+                    citations.append({
+                        'file_id': citation.file_id,
+                        'file_name': file_name,
+                        'quote': citation.quote if hasattr(citation, 'quote') else None
+                    })
+                except Exception as e:
+                    print(f"Error retrieving cited file: {e}")
+
+        return response_text, citations
+    except Exception as e:
+        print(f"Error processing assistant response: {e}")
+        return None, []
+
+# =============================================================================
 
 def login_required(f):
     @wraps(f)
@@ -723,6 +834,135 @@ def chat():
         db.session.rollback()
         print(f"Error in chat endpoint: {e}")
         return jsonify({'error': 'An error occurred while processing your message'}), 500
+
+@app.route('/chat-with-document', methods=['POST'])
+@login_required
+def chat_with_document():
+    """Chat endpoint with document RAG support using OpenAI Assistants API"""
+    start_time = time.time()
+
+    user_message = request.form.get('message', '').strip()
+    uploaded_files = request.files.getlist('files')
+    session_id = session.get('session_id', 'default')
+    user_id = session.get('user_id')
+
+    if not user_message:
+        return jsonify({'error': 'No message provided'}), 400
+
+    if not ASSISTANT_ID or not VECTOR_STORE_ID:
+        return jsonify({'error': 'Document RAG not configured. Please check environment variables.'}), 500
+
+    try:
+        # Get or create thread for this session
+        thread_id = get_or_create_thread(session_id)
+        if not thread_id:
+            return jsonify({'error': 'Failed to create conversation thread'}), 500
+
+        # Process uploaded documents
+        file_ids = []
+        document_info = []
+
+        if uploaded_files:
+            for file in uploaded_files:
+                if file and file.filename and allowed_document_file(file.filename):
+                    try:
+                        # Upload to OpenAI Files API
+                        openai_file = client.files.create(
+                            file=file,
+                            purpose='assistants'
+                        )
+                        file_ids.append(openai_file.id)
+
+                        # Add file to vector store
+                        client.vector_stores.files.create(
+                            vector_store_id=VECTOR_STORE_ID,
+                            file_id=openai_file.id
+                        )
+
+                        # Save to database
+                        doc = save_document_upload(user_id, session_id, file, openai_file.id)
+                        if doc:
+                            document_info.append(f"- {doc.original_filename} ({doc.mime_type})")
+
+                    except Exception as e:
+                        print(f"Error uploading document {file.filename}: {e}")
+
+        # Create user message record
+        user_msg = ChatMessage(
+            session_id=session_id,
+            message_type='user',
+            content=user_message,
+            has_attachments=len(document_info) > 0,
+            thread_id=thread_id,
+            has_document_context=len(file_ids) > 0
+        )
+        db.session.add(user_msg)
+        db.session.flush()
+
+        # Build message content
+        message_content = user_message
+        if document_info:
+            message_content += f"\n\n[Uploaded documents:\n" + "\n".join(document_info) + "]"
+
+        # Add message to thread
+        client.beta.threads.messages.create(
+            thread_id=thread_id,
+            role="user",
+            content=message_content,
+            attachments=[{"file_id": fid, "tools": [{"type": "file_search"}]} for fid in file_ids]
+        )
+
+        # Run the assistant
+        run = client.beta.threads.runs.create(
+            thread_id=thread_id,
+            assistant_id=ASSISTANT_ID
+        )
+
+        # Wait for completion
+        max_wait_time = 30  # seconds
+        poll_interval = 0.5  # seconds
+        elapsed_time = 0
+
+        while run.status in ['queued', 'in_progress'] and elapsed_time < max_wait_time:
+            time.sleep(poll_interval)
+            elapsed_time += poll_interval
+            run = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run.id)
+
+        if run.status != 'completed':
+            return jsonify({'error': f'Assistant run did not complete. Status: {run.status}'}), 500
+
+        # Get the assistant's response
+        messages = client.beta.threads.messages.list(thread_id=thread_id, limit=1)
+        response_text, citations = process_assistant_response(messages)
+
+        if not response_text:
+            return jsonify({'error': 'Failed to process assistant response'}), 500
+
+        # Create assistant message record
+        assistant_msg = ChatMessage(
+            session_id=session_id,
+            message_type='assistant',
+            content=response_text,
+            thread_id=thread_id,
+            run_id=run.id,
+            has_document_context=len(citations) > 0,
+            response_time_ms=int((time.time() - start_time) * 1000)
+        )
+        db.session.add(assistant_msg)
+        db.session.commit()
+
+        return jsonify({
+            'response': response_text,
+            'citations': citations,
+            'thread_id': thread_id,
+            'run_id': run.id,
+            'has_document_context': len(citations) > 0
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in chat-with-document endpoint: {e}")
+        return jsonify({'error': 'An error occurred while processing your message with documents'}), 500
 
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):

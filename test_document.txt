@@ -1,0 +1,36 @@
+Ask Chopper Music Production Guide
+
+Introduction:
+Ask Chopper is an AI-powered music assistant designed to help producers, musicians, and creators with their music production questions and workflow optimization.
+
+Key Features:
+1. Beat Pax - A marketplace for sharing and discovering audio packs
+2. Sound library with categorized content (Beats, Sound Pax, Music)
+3. Token-based system for accessing premium content
+4. Real-time chat assistance for music production questions
+
+Production Tips:
+- Always start with setting the right BPM (Beats Per Minute) for your track
+- Use the correct musical key to ensure harmonic consistency
+- Layer sounds carefully to avoid frequency clashing
+- Export in high-quality formats (WAV 24-bit recommended)
+
+Genre Support:
+Ask Chopper supports various genres including:
+- Hip Hop
+- Afrobeats
+- Electronic
+- Jazz
+- R&B
+- Pop
+
+Token System:
+- Listening to a track: 1 token
+- Downloading a track: 3 tokens
+- Users can purchase tokens or earn them through uploads
+
+Community Features:
+Users can upload their own audio packs, track downloads, and interact with other creators. The platform includes user profiles, activity tracking, and feedback systems.
+
+Contact:
+For support and feedback, use the feedback form in the application menu.
