@@ -46,4 +46,7 @@ node_modules/
 
 # Database
 *.db
+*.db.backup
 /tmp/
+instance/
+uploads/

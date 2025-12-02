@@ -5,20 +5,25 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:/tmp/ask_chopper.db"
+  url      = env("DATABASE_URL")
 }
 
 model users {
-  id            Int        @id @default(autoincrement())
+  id            Int              @id @default(autoincrement())
   first_name    String
   surname       String
-  email         String     @unique(map: "sqlite_autoindex_users_1")
+  email         String           @unique(map: "sqlite_autoindex_users_1")
   phone_number  String
   age           Int
   password_hash String
   created_at    DateTime?
   last_login    DateTime?
   feedback      feedback[]
+  profile       user_profiles?
+  tokens        user_tokens?
+  audio_packs   audio_packs[]
+  activities    user_activity[]
+  downloads     user_downloads[]
 }
 
 model chat_messages {
@@ -72,4 +77,73 @@ model feedback {
   additional_comments   String?
   created_at            DateTime?
   user                  users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user_profiles {
+  id           Int       @id @default(autoincrement())
+  user_id      Int       @unique
+  display_name String
+  avatar_url   String?
+  role         String?
+  bio          String?
+  created_at   DateTime?
+  updated_at   DateTime?
+  user         users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user_tokens {
+  id         Int       @id @default(autoincrement())
+  user_id    Int       @unique
+  balance    Int       @default(0)
+  updated_at DateTime?
+  user       users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model audio_packs {
+  id          Int              @id @default(autoincrement())
+  user_id     Int
+  title       String
+  description String?
+  genre       String?
+  bpm         Int?
+  musical_key String?
+  cover_url   String?
+  created_at  DateTime?
+  user        users            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  files       audio_files[]
+  downloads   user_downloads[]
+}
+
+model audio_files {
+  id               Int         @id @default(autoincrement())
+  pack_id          Int
+  title            String
+  file_url         String
+  preview_url      String?
+  duration_seconds Int?
+  tokens_listen    Int         @default(1)
+  tokens_download  Int         @default(3)
+  created_at       DateTime?
+  pack             audio_packs @relation(fields: [pack_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user_activity {
+  id                Int       @id @default(autoincrement())
+  user_id           Int
+  type              String
+  entity_id         Int?
+  entity_type       String?
+  activity_metadata String?
+  created_at        DateTime?
+  user              users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user_downloads {
+  id            Int         @id @default(autoincrement())
+  user_id       Int
+  pack_id       Int
+  category      String      @default("Sound Pax")
+  downloaded_at DateTime?
+  user          users       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pack          audio_packs @relation(fields: [pack_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }

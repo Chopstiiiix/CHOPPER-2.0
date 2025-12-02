@@ -18,10 +18,21 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key-here-change-in-production")
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:////tmp/ask_chopper.db')
+
+# Configure database URI
+# Note: DATABASE_URL is used by Prisma (with file: prefix), but Flask-SQLAlchemy needs sqlite:/// format
+db_url = os.environ.get('DATABASE_URL', '')
+if db_url.startswith('file:'):
+    # Convert Prisma format to Flask-SQLAlchemy format
+    db_path = db_url.replace('file:', '')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+else:
+    # Use default SQLite database in project directory
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ask_chopper.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-app.config['UPLOAD_FOLDER'] = '/tmp/uploads'
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 
 CORS(app)
 
