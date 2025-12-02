@@ -1009,9 +1009,11 @@ def chat_history():
     messages = ChatMessage.query.filter_by(session_id=session_id).order_by(ChatMessage.created_at).all()
     return jsonify([msg.to_dict() for msg in messages])
 
-# Create database tables on app startup
-with app.app_context():
-    db.create_all()
+# Create database tables on app startup (only in development)
+# On Vercel, use Vercel Postgres and run migrations separately
+if not os.environ.get('VERCEL'):
+    with app.app_context():
+        db.create_all()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8000)
