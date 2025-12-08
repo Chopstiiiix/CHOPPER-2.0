@@ -5,10 +5,436 @@ This backlog tracks planned features and improvements for the Ask Chopper music 
 
 ---
 
-## Current Sprint: MCP Integration Enhancement
+## Current Sprint: Production Readiness & Infrastructure
 
 ### Goal
-Enhance AI agent capabilities with Model Context Protocol (MCP) servers to improve context awareness, intelligent recommendations, and user experience.
+Migrate application infrastructure to support production deployment on Vercel with 10 concurrent users. Fix critical blockers preventing data persistence and file storage.
+
+---
+
+## Phase 0: Production Readiness & Infrastructure (CRITICAL PRIORITY)
+**Target Timeline:** Week 1 (3-4 days)
+**Status:** 🔴 Not Started
+**Blocker:** Must complete before any production deployment
+
+### Epic: Production Infrastructure Migration
+
+#### Critical Blockers (Must Fix)
+
+**US-PROD-001: Database Migration to Vercel Postgres**
+- **As a** platform operator
+- **I want** persistent database storage on Vercel
+- **So that** user data and application state survives deployments
+
+**Problem:**
+- SQLite file-based database incompatible with Vercel serverless
+- Data loss between deployments
+- No concurrent user support
+- Database at: `/Users/maclcolmolagundoye/Ask-Chopper/instance/ask_chopper.db` (60KB, ephemeral)
+
+**Acceptance Criteria:**
+- [ ] Vercel Postgres database provisioned
+- [ ] All tables migrated from SQLite schema
+- [ ] Connection pooling configured for serverless
+- [ ] Environment variables set in Vercel
+- [ ] Data persistence verified across deployments
+- [ ] No data loss on function cold starts
+
+**Technical Tasks:**
+- [ ] Create Vercel Postgres database
+- [ ] Install psycopg2-binary for PostgreSQL support
+- [ ] Update DATABASE_URL in Vercel environment variables
+- [ ] Convert SQLite schema to PostgreSQL (handle dialect differences)
+- [ ] Configure SQLAlchemy connection pooling (app.py lines 22-31)
+- [ ] Add pool_pre_ping=True for connection health checks
+- [ ] Migrate existing data (1 user, 3 messages, 1 pack)
+- [ ] Update db.create_all() logic for Vercel (already disabled at line 1014)
+- [ ] Test concurrent connections (10 users)
+- [ ] Document rollback procedure
+
+**Files to Modify:**
+- `app.py` (lines 22-31): Database configuration
+- `requirements.txt`: Add psycopg2-binary
+- `models.py`: Test PostgreSQL compatibility
+- `.env`: Update DATABASE_URL format
+
+**Estimated Effort:** 4-6 hours
+
+---
+
+**US-PROD-002: File Storage Migration to Vercel Blob**
+- **As a** user
+- **I want** uploaded files to persist after deployment
+- **So that** my audio files, images, and documents are always accessible
+
+**Problem:**
+- Local filesystem `/uploads` directory is ephemeral on Vercel
+- All uploads lost after serverless function execution
+- Affects: audio packs, covers, documents, chat attachments
+
+**Acceptance Criteria:**
+- [ ] Vercel Blob storage account created
+- [ ] All file uploads use Vercel Blob API
+- [ ] File serving uses Blob URLs
+- [ ] Existing uploads migrated to cloud storage
+- [ ] File uploads tested in production
+- [ ] Thumbnail generation works with Blob
+
+**Technical Tasks:**
+- [ ] Install @vercel/blob Python SDK
+- [ ] Create Vercel Blob storage (free tier: 1GB)
+- [ ] Update audio file upload (app.py lines 660-677)
+- [ ] Update cover image upload (app.py lines 638-646)
+- [ ] Update document upload for RAG (app.py lines 171-206)
+- [ ] Update chat attachment upload (app.py lines 88-136)
+- [ ] Update file serving endpoint (app.py lines 999-1002)
+- [ ] Update thumbnail creation for cloud storage (app.py lines 77-86)
+- [ ] Migrate existing files from /uploads to Blob
+- [ ] Update database file_path references to Blob URLs
+- [ ] Test multipart upload for large files
+- [ ] Add error handling for upload failures
+
+**Files to Modify:**
+- `app.py`: All file upload/download functions
+- `requirements.txt`: Add vercel-blob SDK
+- `models.py`: Update file_path field documentation
+
+**Estimated Effort:** 4-6 hours
+
+---
+
+**US-PROD-003: Security Hardening**
+- **As a** platform operator
+- **I want** secure production configuration
+- **So that** user data and sessions are protected
+
+**Problem:**
+- Default secret key in use (app.py line 20)
+- Wide-open CORS policy (app.py line 37)
+- Hardcoded verification code (app.py line 50)
+- No CSRF protection
+- No rate limiting
+
+**Acceptance Criteria:**
+- [ ] Strong random secret key generated and set
+- [ ] CORS restricted to production domain
+- [ ] Verification code moved to environment variable
+- [ ] CSRF protection enabled
+- [ ] Rate limiting implemented
+- [ ] Session cookies secured for HTTPS
+
+**Technical Tasks:**
+- [ ] Generate strong SECRET_KEY: `python -c "import secrets; print(secrets.token_hex(32))"`
+- [ ] Set SECRET_KEY in Vercel environment variables
+- [ ] Remove default fallback in app.py line 20
+- [ ] Update CORS configuration (app.py line 37) to restrict origins
+- [ ] Move VERIFICATION_CODE to environment variable (app.py line 50)
+- [ ] Install Flask-WTF for CSRF protection
+- [ ] Install Flask-Limiter for rate limiting
+- [ ] Configure secure session cookies (httponly, secure, samesite)
+- [ ] Add rate limits to endpoints:
+  - [ ] /chat: 10 requests/minute per user
+  - [ ] /chat-with-document: 5 requests/minute per user
+  - [ ] /api/packs/upload: 5 uploads/hour per user
+  - [ ] /register: 3 attempts/hour per IP
+  - [ ] /login: 5 attempts/hour per IP
+  - [ ] /api/tokens/purchase: 10 requests/hour per user
+
+**Files to Modify:**
+- `app.py`: Security configuration
+- `requirements.txt`: Add Flask-WTF, Flask-Limiter
+
+**Estimated Effort:** 2-3 hours
+
+---
+
+#### High Priority Production Features
+
+**US-PROD-004: Error Monitoring & Logging**
+- **As a** developer
+- **I want** to track errors and application behavior in production
+- **So that** I can quickly diagnose and fix issues
+
+**Problem:**
+- Console-only logging with print statements
+- No error tracking service
+- Logs to /tmp which is ephemeral (app.py lines 292-296)
+- No structured logging
+
+**Acceptance Criteria:**
+- [ ] Sentry integration for error tracking
+- [ ] Structured logging with context
+- [ ] Error alerts configured
+- [ ] Performance monitoring enabled
+- [ ] User feedback linked to errors
+
+**Technical Tasks:**
+- [ ] Create Sentry account (free tier)
+- [ ] Install sentry-sdk
+- [ ] Configure Sentry DSN in environment
+- [ ] Replace print statements with logging
+- [ ] Add user context to Sentry events
+- [ ] Configure error sampling rates
+- [ ] Set up alert rules for critical errors
+- [ ] Remove /tmp file logging (app.py lines 292-296)
+- [ ] Add structured logging with JSON format
+- [ ] Log OpenAI API performance metrics
+- [ ] Create logging utility module
+
+**Files to Modify:**
+- `app.py`: Replace all print statements
+- `requirements.txt`: Add sentry-sdk
+- New file: `logging_config.py`
+
+**Estimated Effort:** 2-3 hours
+
+---
+
+**US-PROD-005: Health Checks & Monitoring**
+- **As a** platform operator
+- **I want** application health monitoring
+- **So that** I can detect and respond to issues quickly
+
+**Acceptance Criteria:**
+- [ ] /health endpoint returns service status
+- [ ] Database connectivity check
+- [ ] OpenAI API connectivity check
+- [ ] Uptime monitoring configured
+- [ ] Response time tracking
+
+**Technical Tasks:**
+- [ ] Create /health endpoint
+- [ ] Check database connection health
+- [ ] Check OpenAI API availability
+- [ ] Return JSON status response
+- [ ] Set up Vercel Analytics (built-in)
+- [ ] Configure external uptime monitor (UptimeRobot)
+- [ ] Add response time logging
+- [ ] Create /status endpoint for detailed metrics
+
+**Files to Modify:**
+- `app.py`: Add health check routes
+
+**Estimated Effort:** 1-2 hours
+
+---
+
+**US-PROD-006: Database Performance Optimization**
+- **As a** platform operator
+- **I want** optimized database queries
+- **So that** the app performs well with multiple concurrent users
+
+**Problem:**
+- No database indexes beyond primary keys
+- N+1 queries in some endpoints
+- No query optimization
+- No caching layer
+
+**Acceptance Criteria:**
+- [ ] Database indexes created for common queries
+- [ ] N+1 queries eliminated
+- [ ] Query performance tested with 10 concurrent users
+- [ ] Database connection pooling verified
+
+**Technical Tasks:**
+- [ ] Add index on users.email (verify exists)
+- [ ] Add index on chat_messages.session_id
+- [ ] Add index on chat_messages.thread_id
+- [ ] Add index on user_tokens.user_id
+- [ ] Add index on audio_packs.user_id
+- [ ] Add index on user_downloads.user_id
+- [ ] Add index on user_activity.user_id
+- [ ] Fix N+1 query in user_profile endpoint (app.py line 703)
+- [ ] Fix N+1 query in downloads_list endpoint (app.py line 732)
+- [ ] Use joinedload for eager loading relationships
+- [ ] Configure SQLAlchemy query logging in dev
+- [ ] Test query performance
+
+**Files to Modify:**
+- New file: `migrations/add_indexes.sql` or Alembic migration
+- `app.py`: Optimize query endpoints
+
+**Estimated Effort:** 2-3 hours
+
+---
+
+#### Medium Priority Production Features
+
+**US-PROD-007: Session Management for Serverless**
+- **As a** user
+- **I want** my session to persist across serverless functions
+- **So that** I stay logged in consistently
+
+**Problem:**
+- Cookie-based sessions may not persist well on serverless
+- No server-side session store
+
+**Acceptance Criteria:**
+- [ ] Sessions work reliably on Vercel
+- [ ] No unexpected logouts
+- [ ] Session tested across multiple deployments
+
+**Technical Tasks:**
+- [ ] Test cookie-based sessions on Vercel
+- [ ] If issues: Install Flask-Session with Redis backend
+- [ ] Configure secure cookie settings
+- [ ] Set appropriate session timeout
+- [ ] Test session persistence
+
+**Files to Modify:**
+- `app.py`: Session configuration
+
+**Estimated Effort:** 2-3 hours
+
+---
+
+**US-PROD-008: OpenAI API Performance Optimization**
+- **As a** user
+- **I want** faster AI response times
+- **So that** I have a smooth chat experience
+
+**Problem:**
+- Synchronous OpenAI API calls block request thread (1-3s)
+- Document RAG waits up to 30 seconds
+- May timeout on Vercel (10s Hobby, 60s Pro)
+
+**Acceptance Criteria:**
+- [ ] Chat responses under 3 seconds (p95)
+- [ ] Document RAG under 30 seconds
+- [ ] No timeouts under normal load
+- [ ] Loading states implemented
+
+**Technical Tasks:**
+- [ ] Consider async/await for OpenAI calls
+- [ ] Add streaming responses for chat
+- [ ] Implement timeout handling
+- [ ] Add loading indicators in frontend
+- [ ] Consider webhook callbacks for long operations
+- [ ] Test with 5 concurrent chat requests
+- [ ] Monitor OpenAI API latency
+
+**Files to Modify:**
+- `app.py`: Chat endpoints (lines 754-997)
+- Frontend: Add loading states
+
+**Estimated Effort:** 3-4 hours
+
+---
+
+**US-PROD-009: Environment Configuration Management**
+- **As a** developer
+- **I want** clean environment variable management
+- **So that** deployments are consistent and secure
+
+**Acceptance Criteria:**
+- [ ] All secrets in environment variables
+- [ ] No secrets in code or .env file
+- [ ] Environment variables documented
+- [ ] Vercel environment variables configured
+
+**Technical Tasks:**
+- [ ] Audit all environment variables
+- [ ] Document required variables
+- [ ] Set all variables in Vercel dashboard
+- [ ] Add .env.example template
+- [ ] Remove .env from git (already in .gitignore)
+- [ ] Verify OPENAI_API_KEY not exposed
+- [ ] Add environment validation at startup
+
+**Files to Modify:**
+- New file: `.env.example`
+- New file: `DEPLOYMENT.md`
+- `app.py`: Add env validation
+
+**Estimated Effort:** 1-2 hours
+
+---
+
+**US-PROD-010: Deployment Documentation**
+- **As a** developer
+- **I want** clear deployment procedures
+- **So that** I can deploy safely and consistently
+
+**Acceptance Criteria:**
+- [ ] Deployment guide written
+- [ ] Rollback procedure documented
+- [ ] Environment variables listed
+- [ ] Migration steps documented
+
+**Technical Tasks:**
+- [ ] Write deployment checklist
+- [ ] Document Vercel setup steps
+- [ ] Document database migration process
+- [ ] Document file storage migration
+- [ ] Create troubleshooting guide
+- [ ] Document rollback steps
+
+**Files to Modify:**
+- New file: `DEPLOYMENT.md`
+- Update: `README.md`
+
+**Estimated Effort:** 2 hours
+
+---
+
+### Testing Plan for 10-User Production Test
+
+**Load Testing:**
+- [ ] Test 10 concurrent users browsing
+- [ ] Test 5 concurrent chat requests
+- [ ] Test 3 concurrent file uploads
+- [ ] Test 2 concurrent document RAG requests
+- [ ] Monitor response times
+- [ ] Monitor error rates
+- [ ] Monitor database connections
+
+**Functional Testing:**
+- [ ] User registration and login
+- [ ] Chat functionality
+- [ ] File uploads (all types)
+- [ ] Document RAG functionality
+- [ ] Audio pack marketplace
+- [ ] Token system
+- [ ] Downloads page
+
+**Performance Benchmarks:**
+- Page load: < 1 second
+- Chat response: < 3 seconds (p95)
+- File upload: < 5 seconds for 10MB
+- API endpoints: < 500ms
+
+---
+
+### Success Metrics for Production Test
+
+**Must Have:**
+- Zero data loss incidents
+- 99% uptime during test period
+- All file uploads succeed
+- All critical bugs fixed within 24 hours
+
+**Should Have:**
+- < 2s average response time
+- < 1% error rate
+- User satisfaction > 4/5
+- Zero security incidents
+
+---
+
+### Rollback Plan
+
+**If Critical Issues Occur:**
+1. Immediately rollback via Vercel dashboard
+2. Notify test users via email
+3. Investigate root cause
+4. Fix and redeploy
+5. Monitor for 24 hours
+
+**Rollback Triggers:**
+- Data loss detected
+- Error rate > 10%
+- Multiple user reports of same issue
+- Security vulnerability discovered
 
 ---
 
@@ -671,29 +1097,58 @@ pip install redis
 
 ## Next Actions
 
-### Immediate (This Week)
-1. Review and approve Phase 1 scope
-2. Set up MCP development environment
-3. Create memory MCP proof of concept
-4. Test with existing chat system
+### Immediate (This Week) - CRITICAL
+1. **Review and approve Phase 0 production readiness scope**
+2. **Provision Vercel Postgres database**
+3. **Set up Vercel Blob storage**
+4. **Migrate database schema and data**
+5. **Update file upload/download logic**
+6. **Fix security configurations**
+7. **Deploy to Vercel staging**
+8. **Test with 10 concurrent users**
 
-### Short Term (Next 2 Weeks)
-1. Complete Phase 1 implementation
-2. User testing with 10-20 beta users
-3. Gather feedback and iterate
-4. Plan Phase 2 kickoff
+### Short Term (Next 1-2 Weeks)
+1. Complete Phase 0 production infrastructure
+2. Production test with 10 beta users
+3. Monitor errors, performance, and user feedback
+4. Fix any critical bugs discovered
+5. Document lessons learned
+6. Plan Phase 1 (MCP Integration) kickoff
 
-### Long Term (Next 2 Months)
-1. Complete all 3 phases
+### Medium Term (Next 4-6 Weeks)
+1. Complete Phase 1 (Memory MCP)
+2. Complete Phase 2 (File System MCP)
+3. Expand user base to 50-100 users
+4. Gather feedback and iterate
+5. Plan Phase 3 kickoff
+
+### Long Term (Next 2-3 Months)
+1. Complete Phase 3 (Brave Search MCP)
 2. Measure impact on key metrics
 3. Plan additional MCP integrations
 4. Scale infrastructure as needed
+5. Evaluate additional features from backlog
 
 ---
 
 ## Notes & Decisions
 
 ### Decision Log
+
+**2025-12-08:** Production Readiness Assessment Completed
+- Identified critical infrastructure blockers
+- SQLite and local file storage incompatible with Vercel serverless
+- Must migrate to Vercel Postgres + Vercel Blob before any deployment
+- Added Phase 0 with 10 user stories for production infrastructure
+- Estimated 3-4 days minimum for production readiness
+- Security hardening and monitoring required
+
+**Rationale:**
+- Cannot deploy to production without persistent storage
+- Data loss risk too high with current architecture
+- Must fix critical blockers before feature development
+- Security vulnerabilities need immediate attention
+- Phase 0 is now blocker for all other phases
 
 **2025-12-02:** MCP Integration Approach Selected
 - Chose 3-phase rollout strategy
@@ -718,14 +1173,16 @@ pip install redis
 - [MCP Brave Search](https://github.com/modelcontextprotocol/servers/tree/main/src/brave-search)
 
 ### Related Files
+- `PRODUCTION_READINESS_CHECKLIST.md` - Production deployment checklist
 - `DATABASE_FIXES_SUMMARY.md` - Database architecture
 - `PRISMA_STUDIO_FIX.md` - Database tooling
 - `app.py` - Main Flask application
 - `models.py` - Database models
 - `seed.js` - Test data generation
+- `vercel.json` - Vercel deployment configuration
 
 ---
 
-**Last Updated:** 2025-12-02
-**Version:** 1.0
+**Last Updated:** 2025-12-08
+**Version:** 2.0
 **Maintained By:** Development Team

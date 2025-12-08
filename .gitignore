@@ -55,3 +55,9 @@ uploads/
 cookies.txt
 login_cookies.txt
 *_cookies.txt
+.vercel
+.env*.local
+
+# Scripts with secrets (do not commit)
+set_vercel_env.sh
+setup_vercel_env.sh

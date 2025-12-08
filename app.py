@@ -13,6 +13,7 @@ from functools import wraps
 from werkzeug.utils import secure_filename
 from PIL import Image
 from models import db, ChatMessage, MessageAttachment, User, Feedback, UserProfile, UserTokens, AudioPack, AudioFile, UserActivity, UserDownload, DocumentUpload
+import blob_storage
 
 load_dotenv()
 
@@ -20,17 +21,34 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key-here-change-in-production")
 
 # Configure database URI
-# Note: DATABASE_URL is used by Prisma (with file: prefix), but Flask-SQLAlchemy needs sqlite:/// format
+# Supports both PostgreSQL (production) and SQLite (local development)
 db_url = os.environ.get('DATABASE_URL', '')
-if db_url.startswith('file:'):
-    # Convert Prisma format to Flask-SQLAlchemy format
+
+if db_url.startswith('postgres://'):
+    # Fix for SQLAlchemy - it requires postgresql:// not postgres://
+    db_url = db_url.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+elif db_url.startswith('postgresql://'):
+    # Already in correct format for PostgreSQL
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+elif db_url.startswith('file:'):
+    # Convert Prisma format to Flask-SQLAlchemy format (SQLite)
     db_path = db_url.replace('file:', '')
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 else:
-    # Use default SQLite database in project directory
+    # Default: Use SQLite database in project directory (local development)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ask_chopper.db'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Connection pooling for PostgreSQL (serverless optimization)
+if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgresql://'):
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_size': 5,
+        'pool_recycle': 300,
+        'pool_pre_ping': True,
+        'max_overflow': 10
+    }
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 
@@ -86,53 +104,77 @@ def create_thumbnail(image_path, thumbnail_path, size=(150, 150)):
         return False
 
 def process_uploaded_file(file, message_id):
-    """Process and save uploaded file"""
+    """Process and save uploaded file to Vercel Blob storage"""
     if not file or not allowed_file(file.filename):
         return None
 
     try:
         # Generate unique filename
         filename = generate_unique_filename(file.filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'attachments', filename)
 
-        # Ensure directory exists
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        # Get MIME type
+        mime_type = file.content_type or mimetypes.guess_type(file.filename)[0] or 'application/octet-stream'
 
-        # Save file
-        file.save(file_path)
+        # Upload to Vercel Blob (or fallback to local storage)
+        if blob_storage.is_blob_configured():
+            # Upload to Blob storage
+            blob_path = blob_storage.generate_blob_path('attachments', filename)
+            file_url, file_size = blob_storage.upload_file(file, blob_path, mime_type)
+            file_path = file_url  # Store blob URL as file_path
 
-        # Get file info
-        file_size = os.path.getsize(file_path)
-        mime_type = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
+            # Create thumbnail for images
+            thumbnail_url = None
+            if mime_type.startswith('image/'):
+                file.seek(0)  # Reset file pointer
+                thumbnail_path = blob_storage.generate_blob_path('thumbnails', f"thumb_{filename}")
+                thumbnail_url = blob_storage.upload_thumbnail(file, thumbnail_path)
+                file.seek(0)  # Reset again
 
-        # Create thumbnail for images
-        thumbnail_path = None
-        if mime_type.startswith('image/'):
-            thumbnail_filename = f"thumb_{filename}"
-            thumbnail_path = os.path.join(app.config['UPLOAD_FOLDER'], 'thumbnails', thumbnail_filename)
-            os.makedirs(os.path.dirname(thumbnail_path), exist_ok=True)
+            # Create database record
+            attachment = MessageAttachment(
+                message_id=message_id,
+                filename=filename,
+                original_filename=file.filename,
+                file_path=file_url,  # Blob URL
+                file_size=file_size,
+                mime_type=mime_type,
+                thumbnail_path=thumbnail_url  # Blob URL for thumbnail
+            )
+        else:
+            # Fallback to local storage (for development)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'attachments', filename)
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            file.save(file_path)
+            file_size = os.path.getsize(file_path)
 
-            if create_thumbnail(file_path, thumbnail_path):
-                thumbnail_path = thumbnail_filename
-            else:
-                thumbnail_path = None
+            # Create thumbnail for images
+            thumbnail_path = None
+            if mime_type.startswith('image/'):
+                thumbnail_filename = f"thumb_{filename}"
+                thumbnail_full_path = os.path.join(app.config['UPLOAD_FOLDER'], 'thumbnails', thumbnail_filename)
+                os.makedirs(os.path.dirname(thumbnail_full_path), exist_ok=True)
+                if create_thumbnail(file_path, thumbnail_full_path):
+                    thumbnail_path = thumbnail_filename
+                else:
+                    thumbnail_path = None
 
-        # Create database record
-        attachment = MessageAttachment(
-            message_id=message_id,
-            filename=filename,
-            original_filename=file.filename,
-            file_path=file_path,
-            file_size=file_size,
-            mime_type=mime_type,
-            thumbnail_path=thumbnail_path
-        )
+            attachment = MessageAttachment(
+                message_id=message_id,
+                filename=filename,
+                original_filename=file.filename,
+                file_path=file_path,
+                file_size=file_size,
+                mime_type=mime_type,
+                thumbnail_path=thumbnail_path
+            )
 
         db.session.add(attachment)
         return attachment
 
     except Exception as e:
         print(f"Error processing file {file.filename}: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 # =============================================================================
@@ -169,20 +211,23 @@ def get_or_create_thread(session_id):
         return None
 
 def save_document_upload(user_id, session_id, file, openai_file_id):
-    """Save document upload record to database"""
+    """Save document upload record to database and Vercel Blob storage"""
     try:
         filename = generate_unique_filename(file.filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'documents', filename)
+        mime_type = file.content_type or mimetypes.guess_type(file.filename)[0]
 
-        # Ensure directory exists
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
-        # Save file
-        file.save(file_path)
-
-        # Get file info
-        file_size = os.path.getsize(file_path)
-        mime_type = file.content_type or mimetypes.guess_type(file_path)[0]
+        # Upload to Vercel Blob (or fallback to local storage)
+        if blob_storage.is_blob_configured():
+            # Upload to Blob storage
+            blob_path = blob_storage.generate_blob_path('documents', filename)
+            file_url, file_size = blob_storage.upload_file(file, blob_path, mime_type)
+            file_path = file_url  # Store blob URL
+        else:
+            # Fallback to local storage (for development)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'documents', filename)
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            file.save(file_path)
+            file_size = os.path.getsize(file_path)
 
         # Create database record
         doc = DocumentUpload(
@@ -194,7 +239,7 @@ def save_document_upload(user_id, session_id, file, openai_file_id):
             mime_type=mime_type,
             openai_file_id=openai_file_id,
             vector_store_id=VECTOR_STORE_ID,
-            file_path=file_path
+            file_path=file_path  # Blob URL or local path
         )
         db.session.add(doc)
         db.session.commit()
@@ -202,6 +247,8 @@ def save_document_upload(user_id, session_id, file, openai_file_id):
         return doc
     except Exception as e:
         print(f"Error saving document upload: {e}")
+        import traceback
+        traceback.print_exc()
         db.session.rollback()
         return None
 
@@ -626,66 +673,92 @@ def list_packs():
 def upload_pack():
     user_id = session.get('user_id')
 
-    title = request.form.get('title', '').strip()
-    genre = request.form.get('genre', '').strip()
-    bpm = request.form.get('bpm', type=int)
-    musical_key = request.form.get('musicalKey', '').strip()
+    try:
+        title = request.form.get('title', '').strip()
+        genre = request.form.get('genre', '').strip()
+        bpm = request.form.get('bpm', type=int)
+        musical_key = request.form.get('musicalKey', '').strip()
 
-    if not title:
-        return jsonify({'error': 'Title is required'}), 400
+        if not title:
+            return jsonify({'error': 'Title is required'}), 400
 
-    # Handle cover upload
-    cover_url = None
-    if 'cover' in request.files:
-        cover_file = request.files['cover']
-        if cover_file.filename:
-            filename = secure_filename(cover_file.filename)
-            cover_path = os.path.join(app.config['UPLOAD_FOLDER'], 'covers', filename)
-            os.makedirs(os.path.dirname(cover_path), exist_ok=True)
-            cover_file.save(cover_path)
-            cover_url = f'/uploads/covers/{filename}'
+        # Handle cover upload
+        cover_url = None
+        if 'cover' in request.files:
+            cover_file = request.files['cover']
+            if cover_file.filename:
+                filename = generate_unique_filename(cover_file.filename)
 
-    # Create pack
-    pack = AudioPack(
-        user_id=user_id,
-        title=title,
-        genre=genre,
-        bpm=bpm,
-        musical_key=musical_key,
-        cover_url=cover_url
-    )
-    db.session.add(pack)
-    db.session.flush()
+                # Upload to Vercel Blob (or fallback to local storage)
+                if blob_storage.is_blob_configured():
+                    blob_path = blob_storage.generate_blob_path('covers', filename)
+                    mime_type = cover_file.content_type or 'image/jpeg'
+                    cover_url, _ = blob_storage.upload_file(cover_file, blob_path, mime_type)
+                else:
+                    # Fallback to local storage (for development)
+                    cover_path = os.path.join(app.config['UPLOAD_FOLDER'], 'covers', filename)
+                    os.makedirs(os.path.dirname(cover_path), exist_ok=True)
+                    cover_file.save(cover_path)
+                    cover_url = f'/uploads/covers/{filename}'
 
-    # Handle audio files
-    audio_files = request.files.getlist('audioFiles')
-    for audio_file in audio_files:
-        if audio_file.filename:
-            filename = secure_filename(audio_file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'audio', filename)
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            audio_file.save(file_path)
+        # Create pack
+        pack = AudioPack(
+            user_id=user_id,
+            title=title,
+            genre=genre,
+            bpm=bpm,
+            musical_key=musical_key,
+            cover_url=cover_url
+        )
+        db.session.add(pack)
+        db.session.flush()
 
-            audio_record = AudioFile(
-                pack_id=pack.id,
-                title=audio_file.filename,
-                file_url=f'/uploads/audio/{filename}',
-                tokens_listen=1,
-                tokens_download=3
-            )
-            db.session.add(audio_record)
+        # Handle audio files
+        audio_files = request.files.getlist('audioFiles')
+        for audio_file in audio_files:
+            if audio_file.filename:
+                filename = generate_unique_filename(audio_file.filename)
 
-    # Log activity
-    activity = UserActivity(
-        user_id=user_id,
-        type='UPLOAD',
-        entity_id=pack.id,
-        entity_type='PACK'
-    )
-    db.session.add(activity)
-    db.session.commit()
+                # Upload to Vercel Blob (or fallback to local storage)
+                if blob_storage.is_blob_configured():
+                    blob_path = blob_storage.generate_blob_path('audio', filename)
+                    mime_type = audio_file.content_type or 'audio/mpeg'
+                    file_url, _ = blob_storage.upload_file(audio_file, blob_path, mime_type)
+                else:
+                    # Fallback to local storage (for development)
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'audio', filename)
+                    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                    audio_file.save(file_path)
+                    file_url = f'/uploads/audio/{filename}'
 
-    return jsonify({'success': True, 'pack': pack.to_dict()})
+                audio_record = AudioFile(
+                    pack_id=pack.id,
+                    title=audio_file.filename,
+                    file_url=file_url,  # Blob URL or local path
+                    tokens_listen=1,
+                    tokens_download=3
+                )
+                db.session.add(audio_record)
+
+        # Log activity
+        activity = UserActivity(
+            user_id=user_id,
+            type='UPLOAD',
+            entity_id=pack.id,
+            entity_type='PACK'
+        )
+        db.session.add(activity)
+        db.session.commit()
+
+        return jsonify({'success': True, 'pack': pack.to_dict()})
+
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Upload error: {e}")
+        print(error_details)
+        return jsonify({'error': f'Upload failed: {str(e)}'}), 500
 
 # ============ BEAT PAX FEED & PROFILE ROUTES ============
 
@@ -998,7 +1071,16 @@ def chat_with_document():
 
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
-    """Serve uploaded files"""
+    """
+    Serve uploaded files (for local development only).
+    In production with Vercel Blob, files are served directly from Blob URLs.
+    """
+    # This endpoint is only used when files are stored locally (development)
+    # In production, file_path in database contains Blob URL which is accessed directly
+    if blob_storage.is_blob_configured():
+        # If Blob is configured, this endpoint shouldn't be used
+        # Redirect or return error
+        return jsonify({'error': 'Files are served directly from Blob storage'}), 410
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/api/chat/history')
