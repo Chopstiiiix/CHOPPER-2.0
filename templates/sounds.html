@@ -459,6 +459,130 @@
             }
         }
 
+        /* Audio Player */
+        .audio-player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0d0d0d;
+            border-top: 1px solid #2d2d2d;
+            padding: 15px 20px;
+            display: none;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .audio-player.active {
+            display: flex;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 0 0 250px;
+        }
+
+        .player-cover {
+            width: 50px;
+            height: 50px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .player-details h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .player-details p {
+            font-size: 11px;
+            color: #999999;
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .player-btn {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 8px;
+            transition: all 0.2s;
+        }
+
+        .player-btn:hover {
+            color: #fbbf24;
+        }
+
+        .player-btn.play-pause {
+            background: #ffffff;
+            color: #000000;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .player-btn.play-pause:hover {
+            background: #fbbf24;
+        }
+
+        .player-progress {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-time {
+            font-size: 11px;
+            color: #999999;
+            width: 40px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: #2d2d2d;
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: #ffffff;
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .volume-slider {
+            width: 80px;
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 display: none;
@@ -466,6 +590,14 @@
 
             .upload-form {
                 grid-template-columns: 1fr;
+            }
+
+            .player-info {
+                flex: 0 0 150px;
+            }
+
+            .volume-control {
+                display: none;
             }
         }
     </style>
@@ -613,6 +745,36 @@
         </main>
     </div>
 
+    <!-- Audio Player -->
+    <div class="audio-player" id="audioPlayer">
+        <div class="player-info">
+            <div class="player-cover" id="playerCover"></div>
+            <div class="player-details">
+                <h4 id="playerTitle">No track playing</h4>
+                <p id="playerArtist">-</p>
+            </div>
+        </div>
+        <div class="player-controls">
+            <button class="player-btn" onclick="previousTrack()">⏮</button>
+            <button class="player-btn play-pause" id="playPauseBtn" onclick="togglePlayPause()">▶</button>
+            <button class="player-btn" onclick="nextTrack()">⏭</button>
+            <div class="player-progress">
+                <span class="progress-time" id="currentTime">0:00</span>
+                <div class="progress-bar" id="progressBar" onclick="seekAudio(event)">
+                    <div class="progress-bar-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-time" id="duration">0:00</span>
+            </div>
+        </div>
+        <div class="volume-control">
+            <button class="player-btn" onclick="toggleMute()">🔊</button>
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" oninput="changeVolume(this.value)">
+        </div>
+    </div>
+
+    <!-- Hidden audio element -->
+    <audio id="audioElement"></audio>
+
     <script>
         let tokenBalance = 0;
         let activities = [];
@@ -754,7 +916,14 @@
                 });
                 renderActivity();
 
-                alert(type === 'LISTEN' ? 'Enjoy your listen!' : 'Download started!');
+                // Handle different actions
+                if (type === 'LISTEN') {
+                    // Start playing the pack
+                    await playPack(packId);
+                } else if (type === 'DOWNLOAD') {
+                    // Download all files in the pack
+                    await downloadPack(packId);
+                }
             } catch (err) {
                 console.error('Spend failed:', err);
                 alert('Failed to complete action. Please try again.');
@@ -777,19 +946,218 @@
                     body: formData
                 });
 
+                const data = await res.json();
+
                 if (res.ok) {
                     alert('Pack published successfully!');
                     form.reset();
                     loadInitialData(); // Reload packs
                 } else {
-                    alert('Upload failed. Please try again.');
+                    // Show the specific error message from the server
+                    const errorMsg = data.error || 'Upload failed. Please try again.';
+                    alert(`Upload failed: ${errorMsg}`);
+                    console.error('Server error:', data);
                 }
             } catch (err) {
                 console.error('Upload failed:', err);
-                alert('Upload failed. Please try again.');
+                alert(`Upload failed: ${err.message}. Please check the console for details.`);
             } finally {
                 publishBtn.disabled = false;
                 publishBtn.textContent = 'Publish Pack';
+            }
+        }
+
+        // Audio Player State
+        let currentPlaylist = [];
+        let currentTrackIndex = 0;
+        let currentPack = null;
+        const audioElement = document.getElementById('audioElement');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const progressFill = document.getElementById('progressFill');
+        const currentTimeSpan = document.getElementById('currentTime');
+        const durationSpan = document.getElementById('duration');
+
+        // Audio event listeners
+        audioElement.addEventListener('loadedmetadata', () => {
+            durationSpan.textContent = formatTime(audioElement.duration);
+        });
+
+        audioElement.addEventListener('timeupdate', () => {
+            const progress = (audioElement.currentTime / audioElement.duration) * 100;
+            progressFill.style.width = progress + '%';
+            currentTimeSpan.textContent = formatTime(audioElement.currentTime);
+        });
+
+        audioElement.addEventListener('ended', () => {
+            nextTrack();
+        });
+
+        audioElement.addEventListener('play', () => {
+            playPauseBtn.textContent = '⏸';
+        });
+
+        audioElement.addEventListener('pause', () => {
+            playPauseBtn.textContent = '▶';
+        });
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        async function playPack(packId) {
+            try {
+                // Fetch pack details with all audio files
+                const res = await fetch(`/api/packs/${packId}`);
+                if (!res.ok) {
+                    alert('Failed to load pack details');
+                    return;
+                }
+
+                const pack = await res.json();
+
+                if (!pack.files || pack.files.length === 0) {
+                    alert('This pack has no audio files');
+                    return;
+                }
+
+                // Set up playlist
+                currentPack = pack;
+                currentPlaylist = pack.files;
+                currentTrackIndex = 0;
+
+                // Load and play first track
+                await loadTrack(0);
+                audioElement.play();
+
+                // Show player
+                audioPlayer.classList.add('active');
+            } catch (err) {
+                console.error('Failed to play pack:', err);
+                alert('Failed to play pack. Please try again.');
+            }
+        }
+
+        async function loadTrack(index) {
+            if (index < 0 || index >= currentPlaylist.length) return;
+
+            const track = currentPlaylist[index];
+            currentTrackIndex = index;
+
+            try {
+                // Get audio file URL
+                const res = await fetch(`/api/audio/${track.id}`);
+                if (!res.ok) {
+                    throw new Error('Failed to load audio file');
+                }
+
+                const data = await res.json();
+
+                // Set audio source
+                audioElement.src = data.url;
+
+                // Update player UI
+                document.getElementById('playerTitle').textContent = track.title;
+                document.getElementById('playerArtist').textContent = `${currentPack.title} • Track ${index + 1} of ${currentPlaylist.length}`;
+                document.getElementById('playerCover').style.backgroundImage = currentPack.cover_url ? `url('${currentPack.cover_url}')` : '';
+
+            } catch (err) {
+                console.error('Failed to load track:', err);
+                alert('Failed to load track. Please try again.');
+            }
+        }
+
+        function togglePlayPause() {
+            if (audioElement.paused) {
+                audioElement.play();
+            } else {
+                audioElement.pause();
+            }
+        }
+
+        function previousTrack() {
+            if (currentTrackIndex > 0) {
+                loadTrack(currentTrackIndex - 1);
+                audioElement.play();
+            }
+        }
+
+        function nextTrack() {
+            if (currentTrackIndex < currentPlaylist.length - 1) {
+                loadTrack(currentTrackIndex + 1);
+                audioElement.play();
+            } else {
+                // End of playlist
+                audioElement.pause();
+                audioElement.currentTime = 0;
+            }
+        }
+
+        function seekAudio(event) {
+            const progressBar = document.getElementById('progressBar');
+            const clickX = event.offsetX;
+            const width = progressBar.offsetWidth;
+            const duration = audioElement.duration;
+
+            audioElement.currentTime = (clickX / width) * duration;
+        }
+
+        function changeVolume(value) {
+            audioElement.volume = value / 100;
+        }
+
+        function toggleMute() {
+            audioElement.muted = !audioElement.muted;
+            const volumeBtn = event.target;
+            volumeBtn.textContent = audioElement.muted ? '🔇' : '🔊';
+        }
+
+        async function downloadPack(packId) {
+            try {
+                // Fetch pack details with all audio files
+                const res = await fetch(`/api/packs/${packId}`);
+                if (!res.ok) {
+                    alert('Failed to load pack details');
+                    return;
+                }
+
+                const pack = await res.json();
+
+                if (!pack.files || pack.files.length === 0) {
+                    alert('This pack has no audio files to download');
+                    return;
+                }
+
+                // Download each file
+                for (let i = 0; i < pack.files.length; i++) {
+                    const file = pack.files[i];
+                    const audioRes = await fetch(`/api/audio/${file.id}?download=true`);
+
+                    if (audioRes.ok) {
+                        const data = await audioRes.json();
+                        // Open download URL in new tab
+                        const link = document.createElement('a');
+                        link.href = data.url;
+                        link.download = file.title;
+                        link.target = '_blank';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+
+                        // Small delay between downloads to avoid browser blocking
+                        if (i < pack.files.length - 1) {
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        }
+                    }
+                }
+
+                alert(`Started downloading ${pack.files.length} file(s) from ${pack.title}`);
+            } catch (err) {
+                console.error('Failed to download pack:', err);
+                alert('Failed to download pack. Please try again.');
             }
         }
 

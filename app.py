@@ -49,7 +49,7 @@ if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgresql://'):
         'pool_pre_ping': True,
         'max_overflow': 10
     }
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max file size (supports WAV files)
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 
 CORS(app)
@@ -679,27 +679,45 @@ def upload_pack():
         bpm = request.form.get('bpm', type=int)
         musical_key = request.form.get('musicalKey', '').strip()
 
+        print(f"DEBUG: Upload request - Title: {title}, Genre: {genre}, BPM: {bpm}, Key: {musical_key}")
+
         if not title:
             return jsonify({'error': 'Title is required'}), 400
+
+        # Check if audio files are provided
+        audio_files = request.files.getlist('audioFiles')
+        print(f"DEBUG: Received {len(audio_files)} audio files")
+
+        if not audio_files or len(audio_files) == 0:
+            return jsonify({'error': 'At least one audio file is required'}), 400
+
+        # Check if any of the files have filenames
+        has_valid_files = any(f.filename for f in audio_files)
+        if not has_valid_files:
+            return jsonify({'error': 'No valid audio files provided'}), 400
 
         # Handle cover upload
         cover_url = None
         if 'cover' in request.files:
             cover_file = request.files['cover']
             if cover_file.filename:
+                print(f"DEBUG: Processing cover file: {cover_file.filename}")
                 filename = generate_unique_filename(cover_file.filename)
 
                 # Upload to Vercel Blob (or fallback to local storage)
                 if blob_storage.is_blob_configured():
+                    print("DEBUG: Using Vercel Blob storage for cover")
                     blob_path = blob_storage.generate_blob_path('covers', filename)
                     mime_type = cover_file.content_type or 'image/jpeg'
                     cover_url, _ = blob_storage.upload_file(cover_file, blob_path, mime_type)
                 else:
                     # Fallback to local storage (for development)
+                    print("DEBUG: Using local storage for cover")
                     cover_path = os.path.join(app.config['UPLOAD_FOLDER'], 'covers', filename)
                     os.makedirs(os.path.dirname(cover_path), exist_ok=True)
                     cover_file.save(cover_path)
                     cover_url = f'/uploads/covers/{filename}'
+                print(f"DEBUG: Cover uploaded successfully: {cover_url}")
 
         # Create pack
         pack = AudioPack(
@@ -712,24 +730,31 @@ def upload_pack():
         )
         db.session.add(pack)
         db.session.flush()
+        print(f"DEBUG: Pack created with ID: {pack.id}")
 
         # Handle audio files
-        audio_files = request.files.getlist('audioFiles')
-        for audio_file in audio_files:
+        uploaded_count = 0
+        for i, audio_file in enumerate(audio_files):
             if audio_file.filename:
+                print(f"DEBUG: Processing audio file {i+1}/{len(audio_files)}: {audio_file.filename}")
                 filename = generate_unique_filename(audio_file.filename)
 
                 # Upload to Vercel Blob (or fallback to local storage)
                 if blob_storage.is_blob_configured():
+                    print("DEBUG: Using Vercel Blob storage for audio")
                     blob_path = blob_storage.generate_blob_path('audio', filename)
                     mime_type = audio_file.content_type or 'audio/mpeg'
-                    file_url, _ = blob_storage.upload_file(audio_file, blob_path, mime_type)
+                    print(f"DEBUG: Audio MIME type: {mime_type}")
+                    file_url, file_size = blob_storage.upload_file(audio_file, blob_path, mime_type)
+                    print(f"DEBUG: Audio uploaded to blob: {file_url}, size: {file_size}")
                 else:
                     # Fallback to local storage (for development)
+                    print("DEBUG: Using local storage for audio")
                     file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'audio', filename)
                     os.makedirs(os.path.dirname(file_path), exist_ok=True)
                     audio_file.save(file_path)
                     file_url = f'/uploads/audio/{filename}'
+                    print(f"DEBUG: Audio saved locally: {file_url}")
 
                 audio_record = AudioFile(
                     pack_id=pack.id,
@@ -739,6 +764,10 @@ def upload_pack():
                     tokens_download=3
                 )
                 db.session.add(audio_record)
+                uploaded_count += 1
+                print(f"DEBUG: Audio file {i+1} added to database")
+
+        print(f"DEBUG: Total files uploaded: {uploaded_count}")
 
         # Log activity
         activity = UserActivity(
@@ -750,14 +779,15 @@ def upload_pack():
         db.session.add(activity)
         db.session.commit()
 
+        print(f"DEBUG: Upload completed successfully for pack: {pack.title}")
         return jsonify({'success': True, 'pack': pack.to_dict()})
 
     except Exception as e:
         db.session.rollback()
         import traceback
         error_details = traceback.format_exc()
-        print(f"Upload error: {e}")
-        print(error_details)
+        print(f"ERROR: Upload failed: {e}")
+        print(f"ERROR: Full traceback:\n{error_details}")
         return jsonify({'error': f'Upload failed: {str(e)}'}), 500
 
 # ============ BEAT PAX FEED & PROFILE ROUTES ============
@@ -823,6 +853,45 @@ def downloads_list():
         'soundPax': sound_pax,
         'music': music
     })
+
+# API: Get pack details with all audio files
+@app.route('/api/packs/<int:pack_id>', methods=['GET'])
+@login_required
+def get_pack_details(pack_id):
+    """Get detailed information about a pack including all audio files"""
+    pack = AudioPack.query.get_or_404(pack_id)
+
+    pack_data = pack.to_dict()
+    pack_data['files'] = [file.to_dict() for file in pack.files]
+
+    return jsonify(pack_data)
+
+# API: Stream/Download audio file
+@app.route('/api/audio/<int:file_id>', methods=['GET'])
+@login_required
+def get_audio_file(file_id):
+    """Serve audio file for playback or download"""
+    audio_file = AudioFile.query.get_or_404(file_id)
+    download = request.args.get('download', 'false').lower() == 'true'
+
+    # If using Blob storage, redirect to the blob URL
+    if audio_file.file_url.startswith('http'):
+        return jsonify({
+            'url': audio_file.file_url,
+            'title': audio_file.title,
+            'download': download
+        })
+
+    # For local storage, serve the file directly
+    file_path = audio_file.file_url.replace('/uploads/audio/', '')
+    directory = os.path.join(app.config['UPLOAD_FOLDER'], 'audio')
+
+    return send_from_directory(
+        directory,
+        file_path,
+        as_attachment=download,
+        download_name=audio_file.title if download else None
+    )
 
 @app.route('/chat', methods=['POST'])
 @login_required
