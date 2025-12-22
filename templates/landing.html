@@ -100,7 +100,7 @@
             text-decoration: none;
             transition: all 0.3s ease;
             cursor: pointer;
-            margin-top: 550px;
+            margin-top: 600px;
         }
 
         .cta-button:hover {
@@ -225,6 +225,7 @@
         @media (max-width: 768px) {
             .hero-section {
                 justify-content: flex-start;
+                overflow: hidden;
             }
 
             .hero-content {
@@ -240,17 +241,19 @@
             }
 
             .cta-button {
-                margin-top: 520px;
+                margin-top: 400px;
             }
 
             #spline-background {
-                width: 100vw;
-                height: 100vh;
-                min-height: 100vh;
-                top: 50%;
+                width: 90%;
+                height: 60%;
+                max-width: 100vw;
+                min-height: auto;
+                top: 45%;
                 left: 50%;
-                transform: translate(-50%, -50%);
+                transform: translate(-50%, -50%) scale(0.85);
                 -webkit-overflow-scrolling: touch;
+                object-fit: contain;
             }
 
             .benefits-section h2,
@@ -266,11 +269,13 @@
         /* iPhone specific optimizations */
         @media (max-width: 430px) {
             #spline-background {
-                width: 100vw;
-                height: 100vh;
-                transform: translate(-50%, -50%);
-                top: 50%;
+                width: 85%;
+                height: 55%;
+                max-width: 100vw;
+                transform: translate(-50%, -50%) scale(0.8);
+                top: 42%;
                 left: 50%;
+                object-fit: contain;
             }
 
             .hero-content {
@@ -282,7 +287,7 @@
             }
 
             .cta-button {
-                margin-top: 480px;
+                margin-top: 360px;
             }
         }
     </style>
