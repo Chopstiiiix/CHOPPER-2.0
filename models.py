@@ -211,8 +211,8 @@ class DocumentUpload(db.Model):
     original_filename = db.Column(db.String(255), nullable=False)
     file_size = db.Column(db.Integer, nullable=False)
     mime_type = db.Column(db.String(100))
-    openai_file_id = db.Column(db.String(100), unique=True)
-    vector_store_id = db.Column(db.String(100))
+    chroma_doc_id = db.Column(db.String(100), unique=True)
+    chunk_count = db.Column(db.Integer, default=0)
     file_path = db.Column(db.String(500), nullable=False)
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime)
@@ -230,8 +230,8 @@ class DocumentUpload(db.Model):
             'original_filename': self.original_filename,
             'file_size': self.file_size,
             'mime_type': self.mime_type,
-            'openai_file_id': self.openai_file_id,
-            'vector_store_id': self.vector_store_id,
+            'chroma_doc_id': self.chroma_doc_id,
+            'chunk_count': self.chunk_count,
             'uploaded_at': self.uploaded_at.isoformat() if self.uploaded_at else None,
             'expires_at': self.expires_at.isoformat() if self.expires_at else None,
             'is_processed': self.is_processed
@@ -244,3 +244,61 @@ class DocumentUpload(db.Model):
                 os.remove(self.file_path)
         except Exception as e:
             print(f"Error deleting document file: {e}")
+
+
+class AdminMessage(db.Model):
+    """Messages sent by users to the admin/Ask Chopper team"""
+    __tablename__ = 'admin_messages'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    subject = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    is_replied = db.Column(db.Boolean, default=False)
+    admin_reply = db.Column(db.Text)
+    replied_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationship to user
+    user = db.relationship('User', backref='admin_messages')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'user_name': f"{self.user.first_name} {self.user.surname}" if self.user else None,
+            'user_email': self.user.email if self.user else None,
+            'subject': self.subject,
+            'message': self.message,
+            'is_read': self.is_read,
+            'is_replied': self.is_replied,
+            'admin_reply': self.admin_reply,
+            'replied_at': self.replied_at.isoformat() if self.replied_at else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class SupportChat(db.Model):
+    """Chat messages between users and admin support"""
+    __tablename__ = 'support_chats'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    sender_type = db.Column(db.String(20), nullable=False)  # 'user' or 'admin'
+    message = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationship to user
+    user = db.relationship('User', backref='support_chats')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'sender_type': self.sender_type,
+            'message': self.message,
+            'is_read': self.is_read,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }

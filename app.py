@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from functools import wraps
 from werkzeug.utils import secure_filename
 from PIL import Image
-from models import db, ChatMessage, MessageAttachment, User, Feedback, UserProfile, DocumentUpload, AdminMessage
+from models import db, ChatMessage, MessageAttachment, User, Feedback, UserProfile, DocumentUpload, AdminMessage, SupportChat
 import blob_storage
 from chroma_client import (
     get_collection, add_document_chunks, query_documents,
@@ -679,6 +679,66 @@ def get_message(message_id):
     except Exception as e:
         print(f"Error fetching message: {e}")
         return jsonify({'error': 'Failed to fetch message'}), 500
+
+# Support Chat API endpoints
+@app.route('/api/support-chat', methods=['GET'])
+@login_required
+def get_support_chat():
+    """Get all support chat messages for the current user"""
+    try:
+        user_id = session.get('user_id')
+        messages = SupportChat.query.filter_by(user_id=user_id).order_by(SupportChat.created_at.asc()).all()
+
+        # Mark admin messages as read
+        unread = SupportChat.query.filter_by(user_id=user_id, sender_type='admin', is_read=False).all()
+        for msg in unread:
+            msg.is_read = True
+        if unread:
+            db.session.commit()
+
+        return jsonify({'messages': [msg.to_dict() for msg in messages]})
+    except Exception as e:
+        print(f"Error fetching support chat: {e}")
+        return jsonify({'error': 'Failed to fetch messages'}), 500
+
+@app.route('/api/support-chat', methods=['POST'])
+@login_required
+def send_support_message():
+    """Send a message to admin support"""
+    try:
+        user_id = session.get('user_id')
+        data = request.get_json()
+        message_text = data.get('message', '').strip()
+
+        if not message_text:
+            return jsonify({'error': 'Message cannot be empty'}), 400
+
+        chat_msg = SupportChat(
+            user_id=user_id,
+            sender_type='user',
+            message=message_text
+        )
+
+        db.session.add(chat_msg)
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': chat_msg.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error sending support message: {e}")
+        return jsonify({'error': 'Failed to send message'}), 500
+
+@app.route('/api/support-chat/unread', methods=['GET'])
+@login_required
+def get_unread_count():
+    """Get count of unread admin messages"""
+    try:
+        user_id = session.get('user_id')
+        count = SupportChat.query.filter_by(user_id=user_id, sender_type='admin', is_read=False).count()
+        return jsonify({'unread_count': count})
+    except Exception as e:
+        print(f"Error fetching unread count: {e}")
+        return jsonify({'error': 'Failed to fetch unread count'}), 500
 
 @app.route('/chat', methods=['POST'])
 @login_required
