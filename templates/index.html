@@ -822,11 +822,13 @@
 
         .support-msg {
             max-width: 85%;
-            padding: 10px 14px;
-            border-radius: 12px;
-            font-size: 13px;
-            line-height: 1.5;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.6;
             word-wrap: break-word;
+            word-break: break-word;
+            white-space: pre-wrap;
         }
 
         .support-msg.user {
@@ -834,6 +836,8 @@
             background: #2f2f2f;
             color: #ffffff;
             border-bottom-right-radius: 4px;
+            text-align: left;
+            margin-left: 15%;
         }
 
         .support-msg.admin {
@@ -841,16 +845,29 @@
             background: #1a3a5c;
             color: #e3e3e3;
             border-bottom-left-radius: 4px;
+            text-align: left;
+            margin-right: 15%;
+        }
+
+        .support-msg-text {
+            margin-bottom: 6px;
         }
 
         .support-msg-time {
             font-size: 10px;
-            color: #666666;
-            margin-top: 4px;
+            color: #888888;
+            margin-top: 6px;
+            display: block;
         }
 
         .support-msg.user .support-msg-time {
             text-align: right;
+            color: #999999;
+        }
+
+        .support-msg.admin .support-msg-time {
+            text-align: left;
+            color: #7ab8ff;
         }
 
         .support-chat-empty {
@@ -1461,7 +1478,7 @@
             const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             msgDiv.innerHTML = `
-                <div>${escapeHtml(msg.message)}</div>
+                <div class="support-msg-text">${escapeHtml(msg.message)}</div>
                 <div class="support-msg-time">${time}</div>
             `;
 
