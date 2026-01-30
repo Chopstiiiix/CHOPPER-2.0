@@ -441,6 +441,80 @@
             }
         }
 
+        /* Upload Progress Indicator */
+        .upload-progress-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .upload-progress-overlay.show {
+            display: flex;
+        }
+
+        .upload-progress-circle {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .upload-progress-circle svg {
+            transform: rotate(-90deg);
+            width: 80px;
+            height: 80px;
+        }
+
+        .upload-progress-circle .bg {
+            fill: none;
+            stroke: #2d2d2d;
+            stroke-width: 6;
+        }
+
+        .upload-progress-circle .progress {
+            fill: none;
+            stroke: #4a9eff;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 226;
+            stroke-dashoffset: 226;
+            transition: stroke-dashoffset 0.3s ease;
+        }
+
+        .upload-progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .upload-progress-label {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888888;
+        }
+
+        .upload-progress-filename {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666666;
+            max-width: 250px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .welcome-message {
             text-align: center;
             color: #888888;
@@ -974,6 +1048,19 @@
     </div>
     <div class="overlay" id="overlay"></div>
 
+    <!-- Upload Progress Overlay -->
+    <div class="upload-progress-overlay" id="uploadProgressOverlay">
+        <div class="upload-progress-circle">
+            <svg viewBox="0 0 80 80">
+                <circle class="bg" cx="40" cy="40" r="36"></circle>
+                <circle class="progress" id="uploadProgressCircle" cx="40" cy="40" r="36"></circle>
+            </svg>
+            <div class="upload-progress-text" id="uploadProgressText">0%</div>
+        </div>
+        <div class="upload-progress-label" id="uploadProgressLabel">Uploading...</div>
+        <div class="upload-progress-filename" id="uploadProgressFilename"></div>
+    </div>
+
     <!-- Support Chat Button - Bottom Left -->
     <button class="support-chat-button" id="supportChatButton" title="Chat with Support">
         <i data-lucide="message-circle" class="lucide-icon"></i>
@@ -1209,6 +1296,35 @@
             }
         }
 
+        // Upload progress elements
+        const uploadProgressOverlay = document.getElementById('uploadProgressOverlay');
+        const uploadProgressCircle = document.getElementById('uploadProgressCircle');
+        const uploadProgressText = document.getElementById('uploadProgressText');
+        const uploadProgressLabel = document.getElementById('uploadProgressLabel');
+        const uploadProgressFilename = document.getElementById('uploadProgressFilename');
+
+        function showUploadProgress(filename) {
+            uploadProgressFilename.textContent = filename || '';
+            uploadProgressLabel.textContent = 'Uploading...';
+            uploadProgressText.textContent = '0%';
+            uploadProgressCircle.style.strokeDashoffset = 226;
+            uploadProgressOverlay.classList.add('show');
+        }
+
+        function updateUploadProgress(percent) {
+            const offset = 226 - (226 * percent / 100);
+            uploadProgressCircle.style.strokeDashoffset = offset;
+            uploadProgressText.textContent = Math.round(percent) + '%';
+
+            if (percent >= 100) {
+                uploadProgressLabel.textContent = 'Processing document...';
+            }
+        }
+
+        function hideUploadProgress() {
+            uploadProgressOverlay.classList.remove('show');
+        }
+
         async function sendMessage() {
             const message = messageInput.value.trim();
             if (!message && selectedFiles.length === 0) return;
@@ -1222,6 +1338,7 @@
             formData.append('message', message);
 
             // Add files to FormData
+            const fileNames = selectedFiles.map(f => f.name).join(', ');
             selectedFiles.forEach((file, index) => {
                 formData.append(`files`, file);
             });
@@ -1229,6 +1346,7 @@
             // Add user message
             addMessage(message || '[Attachment]', true);
             messageInput.value = '';
+            const hadFiles = selectedFiles.length > 0;
             selectedFiles = [];
             updateAttachmentPreview();
 
@@ -1245,18 +1363,46 @@
             messageInput.disabled = true;
             sendButton.disabled = true;
 
-            // Show typing indicator
-            showTyping();
+            // Show upload progress for file uploads, otherwise show typing indicator
+            if (hadFiles && useDocumentMode) {
+                showUploadProgress(fileNames);
+            } else {
+                showTyping();
+            }
 
             try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    body: formData
+                // Use XMLHttpRequest for upload progress tracking
+                const response = await new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+
+                    xhr.upload.addEventListener('progress', (e) => {
+                        if (e.lengthComputable && hadFiles) {
+                            const percent = (e.loaded / e.total) * 100;
+                            updateUploadProgress(percent);
+                        }
+                    });
+
+                    xhr.addEventListener('load', () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            resolve({ ok: true, data: JSON.parse(xhr.responseText) });
+                        } else {
+                            try {
+                                resolve({ ok: false, data: JSON.parse(xhr.responseText) });
+                            } catch {
+                                resolve({ ok: false, data: { error: 'Server error' } });
+                            }
+                        }
+                    });
+
+                    xhr.addEventListener('error', () => reject(new Error('Network error')));
+                    xhr.addEventListener('abort', () => reject(new Error('Request aborted')));
+
+                    xhr.open('POST', endpoint);
+                    xhr.send(formData);
                 });
 
-                const data = await response.json();
-
                 if (response.ok) {
+                    const data = response.data;
                     // Handle document mode response with citations
                     if (useDocumentMode && data.citations) {
                         addMessage(data.response, false, data.citations, data.has_document_context);
@@ -1270,11 +1416,12 @@
                         addMessage(errorMsg, false);
                     }
                 } else {
-                    addMessage('Error: ' + (data.error || 'Unknown error occurred'), false);
+                    addMessage('Error: ' + (response.data.error || 'Unknown error occurred'), false);
                 }
             } catch (error) {
                 addMessage('Error: Failed to connect to the server. ' + error.message, false);
             } finally {
+                hideUploadProgress();
                 hideTyping();
                 messageInput.disabled = false;
                 sendButton.disabled = false;
