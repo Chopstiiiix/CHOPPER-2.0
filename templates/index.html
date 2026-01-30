@@ -441,78 +441,78 @@
             }
         }
 
-        /* Upload Progress Indicator */
-        .upload-progress-overlay {
+        /* Upload Progress Indicator - Minimalist */
+        .upload-progress-bar {
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 2000;
-            justify-content: center;
             align-items: center;
-            flex-direction: column;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            margin-bottom: 8px;
         }
 
-        .upload-progress-overlay.show {
+        .upload-progress-bar.show {
             display: flex;
         }
 
-        .upload-progress-circle {
-            width: 80px;
-            height: 80px;
-            position: relative;
+        .upload-progress-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #2d2d2d;
+            border-top-color: #4a9eff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
 
-        .upload-progress-circle svg {
-            transform: rotate(-90deg);
-            width: 80px;
-            height: 80px;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        .upload-progress-circle .bg {
-            fill: none;
-            stroke: #2d2d2d;
-            stroke-width: 6;
-        }
-
-        .upload-progress-circle .progress {
-            fill: none;
-            stroke: #4a9eff;
-            stroke-width: 6;
-            stroke-linecap: round;
-            stroke-dasharray: 226;
-            stroke-dashoffset: 226;
-            transition: stroke-dashoffset 0.3s ease;
-        }
-
-        .upload-progress-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 16px;
-            font-weight: 600;
-            color: #ffffff;
-        }
-
-        .upload-progress-label {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #888888;
+        .upload-progress-info {
+            flex: 1;
+            min-width: 0;
         }
 
         .upload-progress-filename {
-            margin-top: 8px;
             font-size: 12px;
-            color: #666666;
-            max-width: 250px;
-            text-align: center;
+            color: #ffffff;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        .upload-progress-status {
+            font-size: 11px;
+            color: #888888;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .upload-progress-track {
+            flex: 1;
+            height: 3px;
+            background: #2d2d2d;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .upload-progress-fill {
+            height: 100%;
+            background: #4a9eff;
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.2s ease;
+        }
+
+        .upload-progress-percent {
+            font-size: 11px;
+            color: #4a9eff;
+            font-weight: 500;
+            min-width: 32px;
+            text-align: right;
         }
 
         .welcome-message {
@@ -1048,18 +1048,6 @@
     </div>
     <div class="overlay" id="overlay"></div>
 
-    <!-- Upload Progress Overlay -->
-    <div class="upload-progress-overlay" id="uploadProgressOverlay">
-        <div class="upload-progress-circle">
-            <svg viewBox="0 0 80 80">
-                <circle class="bg" cx="40" cy="40" r="36"></circle>
-                <circle class="progress" id="uploadProgressCircle" cx="40" cy="40" r="36"></circle>
-            </svg>
-            <div class="upload-progress-text" id="uploadProgressText">0%</div>
-        </div>
-        <div class="upload-progress-label" id="uploadProgressLabel">Uploading...</div>
-        <div class="upload-progress-filename" id="uploadProgressFilename"></div>
-    </div>
 
     <!-- Support Chat Button - Bottom Left -->
     <button class="support-chat-button" id="supportChatButton" title="Chat with Support">
@@ -1115,6 +1103,19 @@
                 <i data-lucide="paperclip" class="lucide-icon"></i>
             </div>
             <div class="input-wrapper">
+                <!-- Upload Progress Bar -->
+                <div class="upload-progress-bar" id="uploadProgressBar">
+                    <div class="upload-progress-spinner"></div>
+                    <div class="upload-progress-info">
+                        <div class="upload-progress-filename" id="uploadProgressFilename"></div>
+                        <div class="upload-progress-status">
+                            <div class="upload-progress-track">
+                                <div class="upload-progress-fill" id="uploadProgressFill"></div>
+                            </div>
+                            <span class="upload-progress-percent" id="uploadProgressPercent">0%</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="doc-mode-indicator" id="docModeIndicator">
                     <i data-lucide="file-text" class="lucide-icon"></i>
                     <span>Document mode active - I'll analyze your files</span>
@@ -1297,32 +1298,29 @@
         }
 
         // Upload progress elements
-        const uploadProgressOverlay = document.getElementById('uploadProgressOverlay');
-        const uploadProgressCircle = document.getElementById('uploadProgressCircle');
-        const uploadProgressText = document.getElementById('uploadProgressText');
-        const uploadProgressLabel = document.getElementById('uploadProgressLabel');
+        const uploadProgressBar = document.getElementById('uploadProgressBar');
+        const uploadProgressFill = document.getElementById('uploadProgressFill');
+        const uploadProgressPercent = document.getElementById('uploadProgressPercent');
         const uploadProgressFilename = document.getElementById('uploadProgressFilename');
 
         function showUploadProgress(filename) {
-            uploadProgressFilename.textContent = filename || '';
-            uploadProgressLabel.textContent = 'Uploading...';
-            uploadProgressText.textContent = '0%';
-            uploadProgressCircle.style.strokeDashoffset = 226;
-            uploadProgressOverlay.classList.add('show');
+            uploadProgressFilename.textContent = filename || 'Uploading file...';
+            uploadProgressFill.style.width = '0%';
+            uploadProgressPercent.textContent = '0%';
+            uploadProgressBar.classList.add('show');
         }
 
         function updateUploadProgress(percent) {
-            const offset = 226 - (226 * percent / 100);
-            uploadProgressCircle.style.strokeDashoffset = offset;
-            uploadProgressText.textContent = Math.round(percent) + '%';
+            uploadProgressFill.style.width = percent + '%';
+            uploadProgressPercent.textContent = Math.round(percent) + '%';
 
             if (percent >= 100) {
-                uploadProgressLabel.textContent = 'Processing document...';
+                uploadProgressFilename.textContent = 'Processing...';
             }
         }
 
         function hideUploadProgress() {
-            uploadProgressOverlay.classList.remove('show');
+            uploadProgressBar.classList.remove('show');
         }
 
         async function sendMessage() {
