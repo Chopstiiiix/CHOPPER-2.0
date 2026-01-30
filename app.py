@@ -985,6 +985,16 @@ def chat_with_document():
 
         if uploaded_files:
             print(f"DEBUG: Processing {len(uploaded_files)} uploaded files")
+
+            # IMPORTANT: Clear old session documents from ChromaDB to prevent mixing
+            # This ensures each new upload starts fresh without old document context
+            try:
+                print(f"DEBUG: Clearing old session documents from ChromaDB...")
+                delete_user_documents(user_id, session_id)
+                print(f"DEBUG: Old session documents cleared")
+            except Exception as e:
+                print(f"WARNING: Could not clear old documents: {e}")
+
             for file in uploaded_files:
                 print(f"DEBUG: Checking file: {file.filename if file else 'None'}, allowed: {allowed_document_file(file.filename) if file and file.filename else 'N/A'}")
                 if file and file.filename and allowed_document_file(file.filename):
@@ -1073,12 +1083,17 @@ def chat_with_document():
             print(f"DEBUG: Generating query embedding...")
             query_embedding = generate_query_embedding(user_message)
 
-            print(f"DEBUG: Querying ChromaDB for relevant chunks...")
+            # If we just uploaded a document, query only that specific document
+            # Otherwise query all session documents
+            doc_id_filter = processed_doc_ids[0] if len(processed_doc_ids) == 1 else None
+
+            print(f"DEBUG: Querying ChromaDB for relevant chunks (doc_id filter: {doc_id_filter})...")
             results = query_documents(
                 query_embedding=query_embedding,
                 user_id=user_id,
                 session_id=session_id,
-                n_results=10  # Retrieve more chunks for better context
+                n_results=10,
+                doc_id=doc_id_filter  # Filter to specific document if just uploaded
             )
 
             retrieved_chunks = results.get("documents", [])
