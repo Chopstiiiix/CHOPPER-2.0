@@ -373,6 +373,9 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('authenticated'):
+            # Return JSON error for API endpoints
+            if request.path.startswith('/api/'):
+                return jsonify({'error': 'Authentication required'}), 401
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function

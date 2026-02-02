@@ -1986,6 +1986,13 @@
                     body: formData
                 });
 
+                // Handle authentication error
+                if (response.status === 401) {
+                    showToast('Please login to upload beats', 'error');
+                    setTimeout(() => window.location.href = '/login', 1500);
+                    return;
+                }
+
                 const data = await response.json();
 
                 if (!response.ok || data.error) {
