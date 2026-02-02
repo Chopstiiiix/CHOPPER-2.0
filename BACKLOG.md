@@ -1164,6 +1164,285 @@ pip install redis
 
 ---
 
+### Enhancement: Spotify Remote Player Integration
+**Priority:** Medium
+**Effort:** Medium (1-2 weeks)
+**Status:** 🔴 Not Started - Planning Phase
+
+Add minimalist Spotify remote player to landing page for seamless music playback control without leaving Ask Chopper.
+
+#### Feature Overview
+A small, minimalist music player widget on the landing page that allows users to control their Spotify playback remotely (play, pause, next, previous) without leaving the website. Uses Spotify Connect Web API to control music on any active Spotify device.
+
+#### Requirements
+
+**Spotify Developer Setup:**
+- [ ] Create Spotify Developer account
+- [ ] Register app at https://developer.spotify.com/dashboard
+- [ ] Obtain Client ID and Client Secret
+- [ ] Configure redirect URI (e.g., `http://localhost:8000/callback` or production domain)
+
+**User Requirements:**
+- Spotify Premium account (required for playback control API)
+- Active Spotify session on any device (phone, desktop, smart speaker, etc.)
+
+**Technical Stack:**
+- Spotify Web API (OAuth 2.0 authentication)
+- Flask backend for OAuth flow and API proxying
+- Vanilla JavaScript frontend for player controls
+- Session/database storage for access/refresh tokens
+
+#### Implementation Tasks
+
+**Backend (Flask):**
+- [ ] Create `/spotify/login` route for OAuth initiation
+- [ ] Create `/spotify/callback` route for OAuth callback handling
+- [ ] Create `/spotify/refresh-token` endpoint for token renewal
+- [ ] Create `/api/spotify/play` endpoint (PUT /me/player/play)
+- [ ] Create `/api/spotify/pause` endpoint (PUT /me/player/pause)
+- [ ] Create `/api/spotify/next` endpoint (POST /me/player/next)
+- [ ] Create `/api/spotify/previous` endpoint (POST /me/player/previous)
+- [ ] Create `/api/spotify/current-track` endpoint (GET /me/player/currently-playing)
+- [ ] Implement token storage (session or database table)
+- [ ] Implement automatic token refresh logic
+- [ ] Add error handling for expired tokens
+- [ ] Add error handling for no active device
+
+**Frontend (Landing Page):**
+- [ ] Design minimalist player UI (small widget)
+- [ ] Add 4 control buttons (play, pause, next, previous)
+- [ ] Add "Connect Spotify" button/flow
+- [ ] Implement JavaScript for API calls to Flask endpoints
+- [ ] Add current track display (optional)
+- [ ] Add loading states for button clicks
+- [ ] Add error messages for user feedback
+- [ ] Style player to match landing page aesthetic
+- [ ] Make player responsive for mobile
+
+**Database Schema:**
+- [ ] Create `spotify_tokens` table (if using database storage)
+  - user_id (FK to users table)
+  - access_token (encrypted)
+  - refresh_token (encrypted)
+  - expires_at (timestamp)
+  - created_at (timestamp)
+  - updated_at (timestamp)
+
+**Environment Variables:**
+```bash
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_REDIRECT_URI=http://localhost:8000/spotify/callback
+```
+
+#### Spotify API Endpoints to Use
+
+**Authentication:**
+- `POST https://accounts.spotify.com/api/token` - Get/refresh access token
+
+**Playback Control:**
+- `GET /me/player/currently-playing` - Get current track info
+- `PUT /me/player/play` - Resume playback
+- `PUT /me/player/pause` - Pause playback
+- `POST /me/player/next` - Skip to next track
+- `POST /me/player/previous` - Skip to previous track
+- `GET /me/player/devices` - Get available devices (optional)
+
+#### User Flow
+
+1. User visits landing page
+2. Sees "Connect Spotify" button on player widget
+3. Clicks button → redirected to Spotify OAuth login
+4. User authorizes Ask Chopper app
+5. Redirected back to landing page with access token
+6. Player shows active (with 4 control buttons)
+7. User clicks play/pause/next/prev → controls active Spotify device
+8. Token automatically refreshes when expired
+9. Player persists across page refreshes (session/cookie)
+
+#### Limitations & Constraints
+
+- **Requires Spotify Premium:** Free tier users cannot use playback control API
+- **Requires Active Device:** User must have Spotify open somewhere (phone, desktop, etc.)
+- **Controls Existing Playback:** Does not create new player instance, only controls existing device
+- **Rate Limits:** Spotify API has rate limits (should not be an issue for single-user control)
+- **Token Expiry:** Access tokens expire after 1 hour (handle with refresh tokens)
+
+#### Success Metrics
+
+- 30% of landing page visitors connect Spotify
+- 50% of connected users actively use player controls
+- < 1% error rate on playback commands
+- Zero security incidents (token leakage, XSS, etc.)
+- Positive user feedback on convenience
+
+#### Security Considerations
+
+- [ ] Store tokens encrypted in database
+- [ ] Use HTTPS for OAuth redirect
+- [ ] Implement CSRF protection on OAuth callback
+- [ ] Never expose client secret to frontend
+- [ ] Implement rate limiting on API endpoints
+- [ ] Validate all Spotify API responses
+- [ ] Handle token revocation gracefully
+- [ ] Add session timeout for security
+
+#### UI/UX Design Notes
+
+**Minimalist Player Design:**
+- Small, unobtrusive widget (bottom corner or top navbar)
+- Clean, modern buttons (SVG icons)
+- Subtle animations on button clicks
+- Dark theme to match landing page
+- Optional: Show album art thumbnail (32x32px)
+- Optional: Show track name and artist (truncated)
+- Collapsible/expandable state
+- Mobile-friendly touch targets
+
+**Color Scheme:**
+- Match existing landing page black (#0d0d0d)
+- Spotify green accent (#1DB954) for connected state
+- White icons for controls
+- Subtle hover effects
+
+#### Files to Create/Modify
+
+**New Files:**
+- `spotify_oauth.py` - Spotify OAuth handling logic
+- `spotify_api.py` - Spotify API client wrapper
+- `static/js/spotify-player.js` - Frontend player controls
+- `static/css/spotify-player.css` - Player styling
+- `templates/spotify_callback.html` - OAuth callback page (optional)
+
+**Modified Files:**
+- `app.py` - Add Spotify routes
+- `templates/landing.html` - Add player widget
+- `requirements.txt` - Add `spotipy` or `requests` library
+- `models.py` - Add SpotifyToken model (if using database)
+- `.env` - Add Spotify credentials
+
+#### Dependencies
+
+**Python Libraries:**
+```bash
+pip install spotipy  # Spotify API Python wrapper
+# OR
+pip install requests  # Manual API calls
+pip install cryptography  # For token encryption
+```
+
+**Frontend:**
+- No additional dependencies (vanilla JS)
+- Optional: Fetch API polyfill for older browsers
+
+#### Cost Analysis
+
+**Free:**
+- Spotify Web API (no cost for personal use)
+- OAuth integration (no cost)
+- Implementation using existing infrastructure
+
+**Potential Costs:**
+- Development time: 30-40 hours
+- Testing time: 5-10 hours
+- No ongoing infrastructure costs
+
+#### Risk Assessment
+
+**High Risk:**
+- Security of stored tokens → Mitigation: Encryption, secure storage
+- Token expiry handling → Mitigation: Automatic refresh logic
+- No active device scenario → Mitigation: Clear error messaging
+
+**Medium Risk:**
+- Spotify API changes → Mitigation: Use official SDK, monitor changelog
+- User doesn't have Premium → Mitigation: Clear messaging, graceful fallback
+- Rate limiting → Mitigation: Client-side debouncing, rate limit headers
+
+**Low Risk:**
+- Browser compatibility → Mitigation: Modern browsers only, feature detection
+- UI/UX confusion → Mitigation: Clear onboarding, tooltips
+
+#### Testing Plan
+
+**Unit Tests:**
+- [ ] OAuth flow (token exchange)
+- [ ] Token refresh logic
+- [ ] API endpoint responses
+- [ ] Error handling for all edge cases
+
+**Integration Tests:**
+- [ ] End-to-end OAuth flow
+- [ ] Playback control commands
+- [ ] Token expiry and refresh
+- [ ] Error scenarios (no device, expired token)
+
+**Manual Testing:**
+- [ ] Test with Premium account
+- [ ] Test with Free account (should show upgrade message)
+- [ ] Test with no active device
+- [ ] Test token expiry scenario
+- [ ] Test on mobile devices
+- [ ] Test across different browsers
+
+#### Future Enhancements (Post-MVP)
+
+- [ ] Display full now playing info (track, artist, album)
+- [ ] Add progress bar with seek functionality
+- [ ] Add volume control slider
+- [ ] Add shuffle and repeat toggles
+- [ ] Add playlist selection
+- [ ] Add queue management
+- [ ] Add device selection dropdown
+- [ ] Add lyrics display integration
+- [ ] Add smart recommendations based on listening history
+- [ ] Integration with Ask Chopper AI (music recommendations)
+
+#### Documentation Required
+
+- [ ] User guide: "How to connect Spotify"
+- [ ] Developer docs: Spotify API integration
+- [ ] Troubleshooting guide: Common issues
+- [ ] Security documentation: Token handling
+- [ ] API documentation: Internal endpoints
+
+#### Estimated Timeline
+
+**Week 1:**
+- Backend OAuth implementation (3 days)
+- Token storage and refresh logic (1 day)
+- API endpoint proxying (1 day)
+
+**Week 2:**
+- Frontend player UI design (2 days)
+- JavaScript integration (2 days)
+- Testing and debugging (3 days)
+
+**Total:** 10-12 working days
+
+#### Acceptance Criteria
+
+- [ ] User can successfully connect Spotify account via OAuth
+- [ ] User can play/pause current track
+- [ ] User can skip to next track
+- [ ] User can go to previous track
+- [ ] Player shows clear "Connect Spotify" state when not connected
+- [ ] Player shows active state when connected
+- [ ] Tokens automatically refresh when expired
+- [ ] Clear error messages for all failure scenarios
+- [ ] Player is responsive on mobile devices
+- [ ] No security vulnerabilities in token handling
+- [ ] All unit and integration tests passing
+- [ ] Documentation complete
+
+#### Related User Stories
+
+- Could integrate with US-007 (Current Music Trends) for recommendations
+- Could enhance user engagement metrics from Phase 3
+- Could tie into token system for rewards (listen X songs, earn tokens)
+
+---
+
 ## Resources
 
 ### Documentation
@@ -1183,6 +1462,6 @@ pip install redis
 
 ---
 
-**Last Updated:** 2025-12-08
-**Version:** 2.0
+**Last Updated:** 2025-12-22
+**Version:** 2.1
 **Maintained By:** Development Team
