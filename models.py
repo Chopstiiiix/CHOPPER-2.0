@@ -303,3 +303,140 @@ class SupportChat(db.Model):
             'is_read': self.is_read,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
+
+
+# =============================================================================
+# Beatpax Models
+# =============================================================================
+
+class Beat(db.Model):
+    """Beat content for the Beatpax marketplace"""
+    __tablename__ = 'beats'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    audio_url = db.Column(db.String(500), nullable=False)
+    cover_url = db.Column(db.String(500))
+    genre = db.Column(db.String(50), nullable=False)
+    bpm = db.Column(db.Integer)
+    key = db.Column(db.String(10))
+    tags = db.Column(db.String(500))  # Comma-separated tags
+    token_cost = db.Column(db.Integer, nullable=False, default=5)
+    play_count = db.Column(db.Integer, default=0)
+    download_count = db.Column(db.Integer, default=0)
+    is_featured = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    creator = db.relationship('User', backref='beats')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'creator_id': self.creator_id,
+            'creator_name': f"{self.creator.first_name} {self.creator.surname}" if self.creator else None,
+            'audio_url': self.audio_url,
+            'cover_url': self.cover_url,
+            'genre': self.genre,
+            'bpm': self.bpm,
+            'key': self.key,
+            'tags': self.tags.split(',') if self.tags else [],
+            'token_cost': self.token_cost,
+            'play_count': self.play_count,
+            'download_count': self.download_count,
+            'is_featured': self.is_featured,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class Wallet(db.Model):
+    """User token wallet for Beatpax"""
+    __tablename__ = 'wallets'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False)
+    balance = db.Column(db.Integer, nullable=False, default=50)  # New user bonus
+    total_spent = db.Column(db.Integer, nullable=False, default=0)
+    total_earned = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationship
+    user = db.relationship('User', backref='wallet')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'balance': self.balance,
+            'total_spent': self.total_spent,
+            'total_earned': self.total_earned,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class Transaction(db.Model):
+    """Token transaction history for Beatpax"""
+    __tablename__ = 'transactions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    transaction_type = db.Column(db.String(20), nullable=False)  # 'purchase', 'spend', 'earn', 'bonus'
+    amount = db.Column(db.Integer, nullable=False)  # Positive for credits, negative for debits
+    balance_after = db.Column(db.Integer, nullable=False)
+    reference_type = db.Column(db.String(50))  # 'beat_download', 'beat_sale', 'token_purchase', 'signup_bonus'
+    reference_id = db.Column(db.Integer)  # ID of related beat or package
+    description = db.Column(db.String(200))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationship
+    user = db.relationship('User', backref='transactions')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'transaction_type': self.transaction_type,
+            'amount': self.amount,
+            'balance_after': self.balance_after,
+            'reference_type': self.reference_type,
+            'reference_id': self.reference_id,
+            'description': self.description,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class UserBeatLibrary(db.Model):
+    """User's purchased/downloaded beats"""
+    __tablename__ = 'user_beat_library'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    beat_id = db.Column(db.Integer, db.ForeignKey('beats.id'), nullable=False)
+    tokens_spent = db.Column(db.Integer, nullable=False)
+    purchased_at = db.Column(db.DateTime, default=datetime.utcnow)
+    downloaded_at = db.Column(db.DateTime)
+    download_count = db.Column(db.Integer, default=0)
+
+    # Relationships
+    user = db.relationship('User', backref='beat_library')
+    beat = db.relationship('Beat', backref='purchases')
+
+    # Unique constraint to prevent duplicate purchases
+    __table_args__ = (db.UniqueConstraint('user_id', 'beat_id', name='unique_user_beat'),)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'beat_id': self.beat_id,
+            'beat': self.beat.to_dict() if self.beat else None,
+            'tokens_spent': self.tokens_spent,
+            'purchased_at': self.purchased_at.isoformat() if self.purchased_at else None,
+            'downloaded_at': self.downloaded_at.isoformat() if self.downloaded_at else None,
+            'download_count': self.download_count
+        }

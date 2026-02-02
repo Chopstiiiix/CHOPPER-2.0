@@ -1,0 +1,2043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beatpax - Beat Marketplace</title>
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Sohne", Helvetica, Arial, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #000000;
+            border-bottom: 1px solid #2d2d2d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo .lucide-icon {
+            width: 24px;
+            height: 24px;
+            color: #4a9eff;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            padding: 8px 12px;
+            width: 300px;
+        }
+
+        .search-box input {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+        }
+
+        .search-box input::placeholder {
+            color: #6e6e6e;
+        }
+
+        .search-box .lucide-icon {
+            width: 18px;
+            height: 18px;
+            color: #6e6e6e;
+            margin-right: 8px;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .token-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .token-display:hover {
+            background: #2d2d2d;
+        }
+
+        .token-display .lucide-icon {
+            width: 18px;
+            height: 18px;
+            color: #ffd700;
+        }
+
+        .token-amount {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .btn-primary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-secondary {
+            background: #2d2d2d;
+            color: #ffffff;
+            border: 1px solid #3a3a3a;
+        }
+
+        .btn-secondary:hover {
+            background: #3a3a3a;
+        }
+
+        .btn .lucide-icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding-top: 60px;
+            min-height: 100vh;
+        }
+
+        /* Hero Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+            padding: 60px 24px;
+            text-align: center;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(to right, #ffffff, #888888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: #888888;
+            margin-bottom: 32px;
+        }
+
+        .hero-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .hero-actions .btn {
+            padding: 12px 24px;
+            font-size: 16px;
+        }
+
+        /* Genre Pills */
+        .genre-section {
+            padding: 24px;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .genre-pills {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .genre-pills::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .genre-pills::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .genre-pills::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 2px;
+        }
+
+        .genre-pill {
+            padding: 10px 20px;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 20px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .genre-pill:hover, .genre-pill.active {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+        }
+
+        /* Beat Sections */
+        .section {
+            padding: 32px 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .section-link {
+            color: #4a9eff;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .section-link:hover {
+            text-decoration: underline;
+        }
+
+        .section-link .lucide-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Beat Grid */
+        .beat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .beat-card {
+            background: #0d0d0d;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .beat-card:hover {
+            border-color: #4a4a4a;
+            transform: translateY(-4px);
+        }
+
+        .beat-cover {
+            aspect-ratio: 1;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .beat-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .beat-cover .placeholder-icon {
+            color: #4a4a4a;
+        }
+
+        .beat-cover .placeholder-icon .lucide-icon {
+            width: 48px;
+            height: 48px;
+        }
+
+        .beat-play-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .beat-card:hover .beat-play-overlay {
+            opacity: 1;
+        }
+
+        .play-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .play-btn .lucide-icon {
+            width: 24px;
+            height: 24px;
+            color: #000000;
+            margin-left: 2px;
+        }
+
+        .beat-info {
+            padding: 16px;
+        }
+
+        .beat-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .beat-creator {
+            font-size: 13px;
+            color: #888888;
+            margin-bottom: 12px;
+        }
+
+        .beat-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .beat-genre {
+            font-size: 11px;
+            padding: 4px 8px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            color: #888888;
+        }
+
+        .beat-price {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffd700;
+        }
+
+        .beat-price .lucide-icon {
+            width: 14px;
+            height: 14px;
+        }
+
+        .beat-owned {
+            color: #34d399;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Lower Grid - Trending/Fresh/Creators */
+        .lower-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            padding: 32px 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .lower-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .lower-section {
+            background: #0d0d0d;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .lower-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lower-section-title .lucide-icon {
+            width: 20px;
+            height: 20px;
+            color: #4a9eff;
+        }
+
+        .lower-beat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .lower-beat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .lower-beat-item:hover {
+            background: #2d2d2d;
+        }
+
+        .lower-beat-cover {
+            width: 48px;
+            height: 48px;
+            border-radius: 6px;
+            background: #2d2d2d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .lower-beat-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .lower-beat-cover .lucide-icon {
+            width: 20px;
+            height: 20px;
+            color: #4a4a4a;
+        }
+
+        .lower-beat-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .lower-beat-title {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lower-beat-creator {
+            font-size: 12px;
+            color: #888888;
+        }
+
+        .lower-beat-price {
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .lower-beat-price .lucide-icon {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* Creator List */
+        .creator-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #1a1a1a;
+            border-radius: 8px;
+        }
+
+        .creator-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4a9eff, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .creator-info {
+            flex: 1;
+        }
+
+        .creator-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .creator-stats {
+            font-size: 12px;
+            color: #888888;
+        }
+
+        /* Upload Panel */
+        .upload-panel {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .upload-panel.active {
+            display: flex;
+        }
+
+        .upload-modal {
+            background: #0d0d0d;
+            border: 1px solid #2d2d2d;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .upload-header {
+            padding: 20px;
+            border-bottom: 1px solid #2d2d2d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upload-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #888888;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .close-btn:hover {
+            color: #ffffff;
+        }
+
+        .close-btn .lucide-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .upload-form {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #cccccc;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+
+        .form-input::placeholder {
+            color: #6e6e6e;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .file-upload {
+            border: 2px dashed #2d2d2d;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-upload:hover {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.05);
+        }
+
+        .file-upload.has-file {
+            border-color: #34d399;
+            background: rgba(52, 211, 153, 0.05);
+        }
+
+        .file-upload .lucide-icon {
+            width: 32px;
+            height: 32px;
+            color: #4a4a4a;
+            margin-bottom: 8px;
+        }
+
+        .file-upload p {
+            font-size: 14px;
+            color: #888888;
+        }
+
+        .file-upload .file-name {
+            font-size: 13px;
+            color: #34d399;
+            margin-top: 8px;
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .token-slider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .token-slider input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            background: #2d2d2d;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .token-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #ffffff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .token-value {
+            min-width: 60px;
+            text-align: center;
+            font-weight: 600;
+            color: #ffd700;
+        }
+
+        .upload-submit {
+            width: 100%;
+            padding: 14px;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .upload-submit:hover {
+            background: #e0e0e0;
+        }
+
+        .upload-submit:disabled {
+            background: #4a4a4a;
+            cursor: not-allowed;
+        }
+
+        /* Wallet Modal */
+        .wallet-modal {
+            max-width: 400px;
+        }
+
+        .wallet-balance {
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        .wallet-balance-label {
+            font-size: 14px;
+            color: #888888;
+            margin-bottom: 8px;
+        }
+
+        .wallet-balance-amount {
+            font-size: 48px;
+            font-weight: 700;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .wallet-balance-amount .lucide-icon {
+            width: 36px;
+            height: 36px;
+        }
+
+        .token-packages {
+            padding: 20px;
+        }
+
+        .token-packages h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .package-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .package-card {
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .package-card:hover {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.1);
+        }
+
+        .package-tokens {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 4px;
+        }
+
+        .package-price {
+            font-size: 14px;
+            color: #888888;
+        }
+
+        /* Audio Player */
+        .audio-player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: #0d0d0d;
+            border-top: 1px solid #2d2d2d;
+            display: none;
+            align-items: center;
+            padding: 0 24px;
+            gap: 20px;
+            z-index: 150;
+        }
+
+        .audio-player.active {
+            display: flex;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 200px;
+        }
+
+        .player-cover {
+            width: 56px;
+            height: 56px;
+            border-radius: 6px;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .player-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .player-cover .lucide-icon {
+            width: 24px;
+            height: 24px;
+            color: #4a4a4a;
+        }
+
+        .player-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .player-title {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-creator {
+            font-size: 12px;
+            color: #888888;
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .player-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .player-btn:hover {
+            color: #4a9eff;
+        }
+
+        .player-btn .lucide-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .player-btn.play-pause {
+            width: 48px;
+            height: 48px;
+            background: #ffffff;
+            border-radius: 50%;
+            color: #000000;
+        }
+
+        .player-btn.play-pause:hover {
+            background: #e0e0e0;
+            color: #000000;
+        }
+
+        .player-progress {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: #2d2d2d;
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4a9eff;
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.1s;
+        }
+
+        .progress-time {
+            font-size: 12px;
+            color: #888888;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .player-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Burger Menu */
+        .burger-menu {
+            position: fixed;
+            left: 20px;
+            top: 70px;
+            cursor: pointer;
+            z-index: 1000;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .burger-menu:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .burger-menu span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: #ffffff;
+            margin: 5px 0;
+            transition: all 0.3s;
+        }
+
+        .burger-menu.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .burger-menu.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .burger-menu.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        .side-menu {
+            position: fixed;
+            left: -250px;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: #000000;
+            border-right: 1px solid #2d2d2d;
+            transition: left 0.3s;
+            z-index: 999;
+            padding-top: 60px;
+        }
+
+        .side-menu.active {
+            left: 0;
+        }
+
+        .side-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #ffffff;
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 15px;
+            transition: background 0.2s;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .side-menu a:hover {
+            background: #1a1a1a;
+        }
+
+        .side-menu a .lucide-icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 998;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #2d2d2d;
+            border-top-color: #4a9eff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888888;
+        }
+
+        .empty-state .lucide-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 16px;
+            color: #4a4a4a;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #0d0d0d;
+            border: 1px solid #2d2d2d;
+            border-radius: 8px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 300;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: #34d399;
+        }
+
+        .toast.error {
+            border-color: #ff4444;
+        }
+
+        .toast .lucide-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .toast.success .lucide-icon {
+            color: #34d399;
+        }
+
+        .toast.error .lucide-icon {
+            color: #ff4444;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .search-box {
+                display: none;
+            }
+
+            .hero-title {
+                font-size: 32px;
+            }
+
+            .beat-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .lower-grid {
+                padding: 20px;
+            }
+
+            .audio-player {
+                padding: 0 16px;
+            }
+
+            .player-progress {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .beat-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Side Menu -->
+    <div class="side-menu" id="sideMenu">
+        <a href="/app"><i data-lucide="home" class="lucide-icon"></i> Home</a>
+        <a href="/beatpax"><i data-lucide="music" class="lucide-icon"></i> Beatpax</a>
+        <a href="/about"><i data-lucide="info" class="lucide-icon"></i> About</a>
+        <a href="/feedback"><i data-lucide="message-square" class="lucide-icon"></i> Feedback</a>
+        <a href="/contact"><i data-lucide="mail" class="lucide-icon"></i> Contact</a>
+        {% if session.get('is_admin') %}
+        <a href="/admin" style="color: #4a9eff;"><i data-lucide="shield" class="lucide-icon"></i> Admin</a>
+        {% endif %}
+        <a href="/logout"><i data-lucide="log-out" class="lucide-icon"></i> Logout</a>
+    </div>
+    <div class="overlay" id="overlay"></div>
+    <div class="burger-menu" id="burgerMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <a href="/beatpax" class="logo">
+                <i data-lucide="disc-3" class="lucide-icon"></i>
+                Beatpax
+            </a>
+            <div class="search-box">
+                <i data-lucide="search" class="lucide-icon"></i>
+                <input type="text" placeholder="Search beats, creators..." id="searchInput">
+            </div>
+        </div>
+        <div class="top-bar-right">
+            <div class="token-display" id="walletBtn">
+                <i data-lucide="coins" class="lucide-icon"></i>
+                <span class="token-amount" id="tokenBalance">{{ wallet_balance }}</span>
+            </div>
+            <button class="btn btn-secondary" id="buyTokensBtn">
+                <i data-lucide="plus" class="lucide-icon"></i>
+                Buy Tokens
+            </button>
+            <button class="btn btn-primary" id="uploadBtn">
+                <i data-lucide="upload" class="lucide-icon"></i>
+                Upload
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Hero Banner -->
+        <div class="hero-banner">
+            <h1 class="hero-title">Discover & Download Beats</h1>
+            <p class="hero-subtitle">Premium beats from top producers. Browse, preview, and download.</p>
+            <div class="hero-actions">
+                <button class="btn btn-primary" onclick="scrollToSection('new-releases')">
+                    <i data-lucide="headphones" class="lucide-icon"></i>
+                    Browse Beats
+                </button>
+                <button class="btn btn-secondary" id="heroUploadBtn">
+                    <i data-lucide="upload" class="lucide-icon"></i>
+                    Upload Your Beat
+                </button>
+            </div>
+        </div>
+
+        <!-- Genre Pills -->
+        <div class="genre-section">
+            <div class="genre-pills" id="genrePills">
+                <button class="genre-pill active" data-genre="all">All Beats</button>
+                <button class="genre-pill" data-genre="Staff Picks">Staff Picks</button>
+                <button class="genre-pill" data-genre="Hip-Hop">Hip-Hop</button>
+                <button class="genre-pill" data-genre="R&B">R&B</button>
+                <button class="genre-pill" data-genre="Pop">Pop</button>
+                <button class="genre-pill" data-genre="Trap">Trap</button>
+                <button class="genre-pill" data-genre="Afrobeats">Afrobeats</button>
+                <button class="genre-pill" data-genre="Soul">Soul</button>
+                <button class="genre-pill" data-genre="Experimental">Experimental</button>
+            </div>
+        </div>
+
+        <!-- New Releases Section -->
+        <div class="section" id="new-releases">
+            <div class="section-header">
+                <h2 class="section-title">New Releases</h2>
+                <a href="#" class="section-link">
+                    See All <i data-lucide="chevron-right" class="lucide-icon"></i>
+                </a>
+            </div>
+            <div class="beat-grid" id="newReleasesGrid">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lower Grid -->
+        <div class="lower-grid">
+            <!-- Trending -->
+            <div class="lower-section">
+                <h3 class="lower-section-title">
+                    <i data-lucide="trending-up" class="lucide-icon"></i>
+                    Trending
+                </h3>
+                <div class="lower-beat-list" id="trendingList">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Super Fresh -->
+            <div class="lower-section">
+                <h3 class="lower-section-title">
+                    <i data-lucide="sparkles" class="lucide-icon"></i>
+                    Super Fresh
+                </h3>
+                <div class="lower-beat-list" id="freshList">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Creators -->
+            <div class="lower-section">
+                <h3 class="lower-section-title">
+                    <i data-lucide="users" class="lucide-icon"></i>
+                    Top Creators
+                </h3>
+                <div class="lower-beat-list" id="creatorsList">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Player -->
+    <div class="audio-player" id="audioPlayer">
+        <div class="player-info">
+            <div class="player-cover" id="playerCover">
+                <i data-lucide="music" class="lucide-icon"></i>
+            </div>
+            <div class="player-details">
+                <div class="player-title" id="playerTitle">-</div>
+                <div class="player-creator" id="playerCreator">-</div>
+            </div>
+        </div>
+        <div class="player-controls">
+            <button class="player-btn play-pause" id="playPauseBtn">
+                <i data-lucide="play" class="lucide-icon" id="playPauseIcon"></i>
+            </button>
+        </div>
+        <div class="player-progress">
+            <span class="progress-time" id="currentTime">0:00</span>
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <span class="progress-time" id="duration">0:00</span>
+        </div>
+        <div class="player-actions">
+            <button class="btn btn-primary" id="downloadBtn">
+                <i data-lucide="download" class="lucide-icon"></i>
+                Download
+            </button>
+        </div>
+    </div>
+
+    <!-- Upload Panel -->
+    <div class="upload-panel" id="uploadPanel">
+        <div class="upload-modal">
+            <div class="upload-header">
+                <h2>Upload Beat</h2>
+                <button class="close-btn" id="closeUpload">
+                    <i data-lucide="x" class="lucide-icon"></i>
+                </button>
+            </div>
+            <form class="upload-form" id="uploadForm">
+                <div class="form-group">
+                    <label class="form-label">Title *</label>
+                    <input type="text" class="form-input" name="title" placeholder="Beat title" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Genre *</label>
+                    <select class="form-select" name="genre" required>
+                        <option value="">Select genre</option>
+                        <option value="Hip-Hop">Hip-Hop</option>
+                        <option value="R&B">R&B</option>
+                        <option value="Pop">Pop</option>
+                        <option value="Trap">Trap</option>
+                        <option value="Afrobeats">Afrobeats</option>
+                        <option value="Soul">Soul</option>
+                        <option value="Experimental">Experimental</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">BPM</label>
+                        <input type="number" class="form-input" name="bpm" placeholder="120" min="60" max="200">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Key</label>
+                        <input type="text" class="form-input" name="key" placeholder="C minor">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tags</label>
+                    <input type="text" class="form-input" name="tags" placeholder="dark, melodic, trap (comma separated)">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Audio File * (MP3, WAV, FLAC - max 50MB)</label>
+                    <div class="file-upload" id="audioUpload">
+                        <i data-lucide="music" class="lucide-icon"></i>
+                        <p>Click to upload audio</p>
+                        <p class="file-name" id="audioFileName"></p>
+                        <input type="file" name="audio" accept=".mp3,.wav,.flac,.m4a" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Cover Image (optional)</label>
+                    <div class="file-upload" id="coverUpload">
+                        <i data-lucide="image" class="lucide-icon"></i>
+                        <p>Click to upload cover</p>
+                        <p class="file-name" id="coverFileName"></p>
+                        <input type="file" name="cover" accept=".jpg,.jpeg,.png,.webp">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Token Price (3-20 tokens)</label>
+                    <div class="token-slider">
+                        <input type="range" name="token_cost" min="3" max="20" value="5" id="tokenSlider">
+                        <span class="token-value" id="tokenSliderValue">5 tokens</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="upload-submit" id="uploadSubmit">
+                    Upload Beat
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Wallet Modal -->
+    <div class="upload-panel" id="walletPanel">
+        <div class="upload-modal wallet-modal">
+            <div class="upload-header">
+                <h2>Your Wallet</h2>
+                <button class="close-btn" id="closeWallet">
+                    <i data-lucide="x" class="lucide-icon"></i>
+                </button>
+            </div>
+            <div class="wallet-balance">
+                <p class="wallet-balance-label">Your Token Balance</p>
+                <div class="wallet-balance-amount">
+                    <i data-lucide="coins" class="lucide-icon"></i>
+                    <span id="walletBalance">{{ wallet_balance }}</span>
+                </div>
+            </div>
+            <div class="token-packages">
+                <h3>Buy More Tokens</h3>
+                <div class="package-grid">
+                    <div class="package-card" data-package="100">
+                        <div class="package-tokens">100</div>
+                        <div class="package-price">$4.99</div>
+                    </div>
+                    <div class="package-card" data-package="250">
+                        <div class="package-tokens">250</div>
+                        <div class="package-price">$9.99</div>
+                    </div>
+                    <div class="package-card" data-package="500">
+                        <div class="package-tokens">500</div>
+                        <div class="package-price">$17.99</div>
+                    </div>
+                    <div class="package-card" data-package="1000">
+                        <div class="package-tokens">1000</div>
+                        <div class="package-price">$29.99</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i data-lucide="check-circle" class="lucide-icon"></i>
+        <span id="toastMessage">Success!</span>
+    </div>
+
+    <audio id="audioElement"></audio>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // State
+        let currentBeat = null;
+        let ownedBeatIds = [];
+        const audio = document.getElementById('audioElement');
+
+        // Elements
+        const burgerMenu = document.getElementById('burgerMenu');
+        const sideMenu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('overlay');
+        const uploadPanel = document.getElementById('uploadPanel');
+        const walletPanel = document.getElementById('walletPanel');
+        const audioPlayer = document.getElementById('audioPlayer');
+
+        // Burger Menu
+        burgerMenu.addEventListener('click', () => {
+            burgerMenu.classList.toggle('active');
+            sideMenu.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            burgerMenu.classList.remove('active');
+            sideMenu.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        // Upload Panel
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            uploadPanel.classList.add('active');
+        });
+
+        document.getElementById('heroUploadBtn').addEventListener('click', () => {
+            uploadPanel.classList.add('active');
+        });
+
+        document.getElementById('closeUpload').addEventListener('click', () => {
+            uploadPanel.classList.remove('active');
+        });
+
+        // Wallet Panel
+        document.getElementById('walletBtn').addEventListener('click', () => {
+            walletPanel.classList.add('active');
+        });
+
+        document.getElementById('buyTokensBtn').addEventListener('click', () => {
+            walletPanel.classList.add('active');
+        });
+
+        document.getElementById('closeWallet').addEventListener('click', () => {
+            walletPanel.classList.remove('active');
+        });
+
+        // Close modals on overlay click
+        uploadPanel.addEventListener('click', (e) => {
+            if (e.target === uploadPanel) {
+                uploadPanel.classList.remove('active');
+            }
+        });
+
+        walletPanel.addEventListener('click', (e) => {
+            if (e.target === walletPanel) {
+                walletPanel.classList.remove('active');
+            }
+        });
+
+        // File uploads
+        const audioUpload = document.getElementById('audioUpload');
+        const coverUpload = document.getElementById('coverUpload');
+
+        audioUpload.addEventListener('click', () => {
+            audioUpload.querySelector('input').click();
+        });
+
+        coverUpload.addEventListener('click', () => {
+            coverUpload.querySelector('input').click();
+        });
+
+        audioUpload.querySelector('input').addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                document.getElementById('audioFileName').textContent = e.target.files[0].name;
+                audioUpload.classList.add('has-file');
+            }
+        });
+
+        coverUpload.querySelector('input').addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                document.getElementById('coverFileName').textContent = e.target.files[0].name;
+                coverUpload.classList.add('has-file');
+            }
+        });
+
+        // Token slider
+        const tokenSlider = document.getElementById('tokenSlider');
+        tokenSlider.addEventListener('input', () => {
+            document.getElementById('tokenSliderValue').textContent = tokenSlider.value + ' tokens';
+        });
+
+        // Genre filter
+        document.querySelectorAll('.genre-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                document.querySelectorAll('.genre-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                loadBeats(pill.dataset.genre);
+            });
+        });
+
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = toast.querySelector('.lucide-icon');
+
+            toastMessage.textContent = message;
+            toast.className = 'toast ' + type;
+
+            if (type === 'success') {
+                toastIcon.setAttribute('data-lucide', 'check-circle');
+            } else {
+                toastIcon.setAttribute('data-lucide', 'x-circle');
+            }
+
+            lucide.createIcons();
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Create beat card HTML
+        function createBeatCard(beat) {
+            const owned = ownedBeatIds.includes(beat.id);
+            return `
+                <div class="beat-card" data-beat-id="${beat.id}" onclick="playBeat(${beat.id})">
+                    <div class="beat-cover">
+                        ${beat.cover_url ?
+                            `<img src="${beat.cover_url}" alt="${beat.title}">` :
+                            `<div class="placeholder-icon"><i data-lucide="music" class="lucide-icon"></i></div>`
+                        }
+                        <div class="beat-play-overlay">
+                            <button class="play-btn">
+                                <i data-lucide="play" class="lucide-icon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="beat-info">
+                        <div class="beat-title">${beat.title}</div>
+                        <div class="beat-creator">${beat.creator_name || 'Unknown'}</div>
+                        <div class="beat-meta">
+                            <span class="beat-genre">${beat.genre}</span>
+                            ${owned ?
+                                `<span class="beat-owned">Owned</span>` :
+                                `<span class="beat-price"><i data-lucide="coins" class="lucide-icon"></i> ${beat.token_cost}</span>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Create lower beat item HTML
+        function createLowerBeatItem(beat) {
+            return `
+                <div class="lower-beat-item" data-beat-id="${beat.id}" onclick="playBeat(${beat.id})">
+                    <div class="lower-beat-cover">
+                        ${beat.cover_url ?
+                            `<img src="${beat.cover_url}" alt="${beat.title}">` :
+                            `<i data-lucide="music" class="lucide-icon"></i>`
+                        }
+                    </div>
+                    <div class="lower-beat-info">
+                        <div class="lower-beat-title">${beat.title}</div>
+                        <div class="lower-beat-creator">${beat.creator_name || 'Unknown'}</div>
+                    </div>
+                    <div class="lower-beat-price">
+                        <i data-lucide="coins" class="lucide-icon"></i> ${beat.token_cost}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Create creator item HTML
+        function createCreatorItem(creator, index) {
+            const initials = creator.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            return `
+                <div class="creator-item">
+                    <div class="creator-avatar">${initials}</div>
+                    <div class="creator-info">
+                        <div class="creator-name">${creator.name}</div>
+                        <div class="creator-stats">${creator.beat_count} beats - ${creator.total_downloads} downloads</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Load catalog data
+        async function loadCatalog() {
+            try {
+                const response = await fetch('/api/beatpax/explore');
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                ownedBeatIds = data.owned_beat_ids || [];
+
+                // New releases
+                const newReleasesGrid = document.getElementById('newReleasesGrid');
+                if (data.new_releases && data.new_releases.length > 0) {
+                    newReleasesGrid.innerHTML = data.new_releases.map(createBeatCard).join('');
+                } else {
+                    newReleasesGrid.innerHTML = `
+                        <div class="empty-state">
+                            <i data-lucide="music" class="lucide-icon"></i>
+                            <h3>No beats yet</h3>
+                            <p>Be the first to upload a beat!</p>
+                        </div>
+                    `;
+                }
+
+                // Trending
+                const trendingList = document.getElementById('trendingList');
+                if (data.trending && data.trending.length > 0) {
+                    trendingList.innerHTML = data.trending.slice(0, 5).map(createLowerBeatItem).join('');
+                } else {
+                    trendingList.innerHTML = '<div class="empty-state"><p>No trending beats yet</p></div>';
+                }
+
+                // Fresh
+                const freshList = document.getElementById('freshList');
+                if (data.fresh && data.fresh.length > 0) {
+                    freshList.innerHTML = data.fresh.slice(0, 5).map(createLowerBeatItem).join('');
+                } else {
+                    freshList.innerHTML = '<div class="empty-state"><p>No fresh beats yet</p></div>';
+                }
+
+                // Creators
+                const creatorsList = document.getElementById('creatorsList');
+                if (data.top_creators && data.top_creators.length > 0) {
+                    creatorsList.innerHTML = data.top_creators.map(createCreatorItem).join('');
+                } else {
+                    creatorsList.innerHTML = '<div class="empty-state"><p>No creators yet</p></div>';
+                }
+
+                lucide.createIcons();
+
+            } catch (error) {
+                console.error('Error loading catalog:', error);
+                showToast('Failed to load catalog', 'error');
+            }
+        }
+
+        // Load beats by genre
+        async function loadBeats(genre) {
+            const grid = document.getElementById('newReleasesGrid');
+            grid.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
+
+            try {
+                const url = genre === 'all' ? '/api/beatpax/beats' : `/api/beatpax/beats?genre=${encodeURIComponent(genre)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.beats && data.beats.length > 0) {
+                    grid.innerHTML = data.beats.map(createBeatCard).join('');
+                } else {
+                    grid.innerHTML = `
+                        <div class="empty-state">
+                            <i data-lucide="music" class="lucide-icon"></i>
+                            <h3>No beats found</h3>
+                            <p>Try a different genre or upload your own!</p>
+                        </div>
+                    `;
+                }
+
+                lucide.createIcons();
+
+            } catch (error) {
+                console.error('Error loading beats:', error);
+                grid.innerHTML = '<div class="empty-state"><p>Failed to load beats</p></div>';
+            }
+        }
+
+        // Play beat
+        let beatsData = {};
+
+        async function playBeat(beatId) {
+            try {
+                // Record play
+                await fetch(`/api/beatpax/beats/${beatId}/play`, { method: 'POST' });
+
+                // Get beat data (cache it)
+                if (!beatsData[beatId]) {
+                    const response = await fetch('/api/beatpax/beats');
+                    const data = await response.json();
+                    data.beats.forEach(b => beatsData[b.id] = b);
+                }
+
+                currentBeat = beatsData[beatId];
+
+                if (!currentBeat) {
+                    showToast('Beat not found', 'error');
+                    return;
+                }
+
+                // Update player UI
+                document.getElementById('playerTitle').textContent = currentBeat.title;
+                document.getElementById('playerCreator').textContent = currentBeat.creator_name || 'Unknown';
+
+                const playerCover = document.getElementById('playerCover');
+                if (currentBeat.cover_url) {
+                    playerCover.innerHTML = `<img src="${currentBeat.cover_url}" alt="${currentBeat.title}">`;
+                } else {
+                    playerCover.innerHTML = '<i data-lucide="music" class="lucide-icon"></i>';
+                    lucide.createIcons();
+                }
+
+                // Update download button
+                const downloadBtn = document.getElementById('downloadBtn');
+                if (ownedBeatIds.includes(beatId)) {
+                    downloadBtn.textContent = 'Owned';
+                } else {
+                    downloadBtn.innerHTML = `<i data-lucide="download" class="lucide-icon"></i> ${currentBeat.token_cost} tokens`;
+                    lucide.createIcons();
+                }
+
+                // Play audio
+                audio.src = currentBeat.audio_url;
+                audio.play();
+
+                // Show player
+                audioPlayer.classList.add('active');
+
+                updatePlayPauseIcon();
+
+            } catch (error) {
+                console.error('Error playing beat:', error);
+                showToast('Failed to play beat', 'error');
+            }
+        }
+
+        // Audio player controls
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+
+        function updatePlayPauseIcon() {
+            const icon = document.getElementById('playPauseIcon');
+            icon.setAttribute('data-lucide', audio.paused ? 'play' : 'pause');
+            lucide.createIcons();
+        }
+
+        playPauseBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+            } else {
+                audio.pause();
+            }
+            updatePlayPauseIcon();
+        });
+
+        audio.addEventListener('timeupdate', () => {
+            const progress = (audio.currentTime / audio.duration) * 100;
+            progressFill.style.width = progress + '%';
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+        });
+
+        audio.addEventListener('loadedmetadata', () => {
+            durationEl.textContent = formatTime(audio.duration);
+        });
+
+        audio.addEventListener('ended', () => {
+            updatePlayPauseIcon();
+        });
+
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = percent * audio.duration;
+        });
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Download button
+        document.getElementById('downloadBtn').addEventListener('click', async () => {
+            if (!currentBeat) return;
+
+            try {
+                const response = await fetch(`/api/beatpax/beats/${currentBeat.id}/download`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showToast(data.error, 'error');
+                    return;
+                }
+
+                // Update balance
+                if (data.new_balance !== undefined) {
+                    document.getElementById('tokenBalance').textContent = data.new_balance;
+                    document.getElementById('walletBalance').textContent = data.new_balance;
+                }
+
+                // Add to owned
+                if (!ownedBeatIds.includes(currentBeat.id)) {
+                    ownedBeatIds.push(currentBeat.id);
+                }
+
+                // Update button
+                document.getElementById('downloadBtn').textContent = 'Owned';
+
+                // Trigger download
+                const link = document.createElement('a');
+                link.href = data.audio_url;
+                link.download = currentBeat.title + '.mp3';
+                link.click();
+
+                showToast(data.message || 'Beat downloaded!', 'success');
+
+            } catch (error) {
+                console.error('Error downloading:', error);
+                showToast('Failed to download', 'error');
+            }
+        });
+
+        // Upload form
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const submitBtn = document.getElementById('uploadSubmit');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Uploading...';
+
+            try {
+                const response = await fetch('/api/beatpax/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showToast(data.error, 'error');
+                    return;
+                }
+
+                showToast(data.message || 'Beat uploaded!', 'success');
+                uploadPanel.classList.remove('active');
+                e.target.reset();
+                document.getElementById('audioFileName').textContent = '';
+                document.getElementById('coverFileName').textContent = '';
+                audioUpload.classList.remove('has-file');
+                coverUpload.classList.remove('has-file');
+                document.getElementById('tokenSliderValue').textContent = '5 tokens';
+
+                // Reload catalog
+                loadCatalog();
+
+            } catch (error) {
+                console.error('Error uploading:', error);
+                showToast('Failed to upload', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Upload Beat';
+            }
+        });
+
+        // Token packages
+        document.querySelectorAll('.package-card').forEach(card => {
+            card.addEventListener('click', async () => {
+                const pkg = card.dataset.package;
+
+                try {
+                    const response = await fetch('/api/tokens/purchase', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ package: pkg })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.error) {
+                        showToast(data.error, 'error');
+                        return;
+                    }
+
+                    // Update balance
+                    document.getElementById('tokenBalance').textContent = data.new_balance;
+                    document.getElementById('walletBalance').textContent = data.new_balance;
+
+                    showToast(data.message || 'Tokens added!', 'success');
+                    walletPanel.classList.remove('active');
+
+                } catch (error) {
+                    console.error('Error purchasing:', error);
+                    showToast('Failed to purchase', 'error');
+                }
+            });
+        });
+
+        // Search
+        let searchTimeout;
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const query = e.target.value.trim();
+                if (query) {
+                    loadBeats('all');  // Could add search param
+                }
+            }, 300);
+        });
+
+        // Scroll to section
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initial load
+        loadCatalog();
+    </script>
+</body>
+</html>

@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from functools import wraps
 from werkzeug.utils import secure_filename
 from PIL import Image
-from models import db, ChatMessage, MessageAttachment, User, Feedback, UserProfile, DocumentUpload, AdminMessage, SupportChat
+from models import db, ChatMessage, MessageAttachment, User, Feedback, UserProfile, DocumentUpload, AdminMessage, SupportChat, Beat, Wallet, Transaction, UserBeatLibrary
 import blob_storage
 from chroma_client import (
     get_collection, add_document_chunks, query_documents,
@@ -527,6 +527,23 @@ def register():
             new_user.set_password(password)
 
             db.session.add(new_user)
+            db.session.flush()  # Get the user ID
+
+            # Create wallet with signup bonus
+            wallet = Wallet(user_id=new_user.id, balance=50)
+            db.session.add(wallet)
+
+            # Record the signup bonus transaction
+            bonus_transaction = Transaction(
+                user_id=new_user.id,
+                transaction_type='bonus',
+                amount=50,
+                balance_after=50,
+                reference_type='signup_bonus',
+                description='Welcome bonus tokens'
+            )
+            db.session.add(bonus_transaction)
+
             db.session.commit()
 
             # Log user in
@@ -1388,6 +1405,570 @@ def chat_history():
     session_id = session.get('session_id', 'default')
     messages = ChatMessage.query.filter_by(session_id=session_id).order_by(ChatMessage.created_at).all()
     return jsonify([msg.to_dict() for msg in messages])
+
+# =============================================================================
+# Beatpax Routes and API Endpoints
+# =============================================================================
+
+ALLOWED_AUDIO_EXTENSIONS = {'mp3', 'wav', 'flac', 'm4a'}
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+MAX_AUDIO_SIZE = 50 * 1024 * 1024  # 50MB
+MAX_IMAGE_SIZE = 5 * 1024 * 1024   # 5MB
+
+def allowed_audio_file(filename):
+    """Check if audio file extension is allowed"""
+    if '.' not in filename:
+        return False
+    ext = filename.rsplit('.', 1)[1].lower()
+    return ext in ALLOWED_AUDIO_EXTENSIONS
+
+def allowed_image_file(filename):
+    """Check if image file extension is allowed"""
+    if '.' not in filename:
+        return False
+    ext = filename.rsplit('.', 1)[1].lower()
+    return ext in ALLOWED_IMAGE_EXTENSIONS
+
+def get_or_create_wallet(user_id):
+    """Get user's wallet or create one if it doesn't exist"""
+    wallet = Wallet.query.filter_by(user_id=user_id).first()
+    if not wallet:
+        wallet = Wallet(user_id=user_id, balance=50)
+        db.session.add(wallet)
+        # Record the signup bonus
+        bonus = Transaction(
+            user_id=user_id,
+            transaction_type='bonus',
+            amount=50,
+            balance_after=50,
+            reference_type='signup_bonus',
+            description='Welcome bonus tokens'
+        )
+        db.session.add(bonus)
+        db.session.commit()
+    return wallet
+
+
+# Page Routes
+@app.route('/beatpax')
+@login_required
+def beatpax():
+    """Main Beatpax catalog page"""
+    user_id = session.get('user_id')
+    wallet = get_or_create_wallet(user_id)
+    return render_template('beatpax.html', wallet_balance=wallet.balance)
+
+
+@app.route('/beatpax/library')
+@login_required
+def beatpax_library():
+    """User's downloaded beats library"""
+    user_id = session.get('user_id')
+    wallet = get_or_create_wallet(user_id)
+    library = UserBeatLibrary.query.filter_by(user_id=user_id).order_by(
+        UserBeatLibrary.purchased_at.desc()
+    ).all()
+    return render_template('beatpax.html',
+                          wallet_balance=wallet.balance,
+                          page='library',
+                          library=library)
+
+
+@app.route('/beatpax/wallet')
+@login_required
+def beatpax_wallet():
+    """Token balance and purchase page"""
+    user_id = session.get('user_id')
+    wallet = get_or_create_wallet(user_id)
+    transactions = Transaction.query.filter_by(user_id=user_id).order_by(
+        Transaction.created_at.desc()
+    ).limit(20).all()
+    return render_template('beatpax.html',
+                          wallet_balance=wallet.balance,
+                          page='wallet',
+                          wallet=wallet,
+                          transactions=transactions)
+
+
+# API Endpoints
+@app.route('/api/beatpax/explore')
+@login_required
+def beatpax_explore():
+    """Get catalog data for explore page"""
+    user_id = session.get('user_id')
+
+    try:
+        # Featured/Hero beat
+        hero_beat = Beat.query.filter_by(is_featured=True, is_active=True).first()
+
+        # New releases (latest 8)
+        new_releases = Beat.query.filter_by(is_active=True).order_by(
+            Beat.created_at.desc()
+        ).limit(8).all()
+
+        # Trending (most downloads in last period)
+        trending = Beat.query.filter_by(is_active=True).order_by(
+            Beat.download_count.desc()
+        ).limit(8).all()
+
+        # Super fresh (last 24 hours, fallback to week)
+        from datetime import timedelta
+        fresh_cutoff = datetime.utcnow() - timedelta(hours=24)
+        fresh = Beat.query.filter(
+            Beat.is_active == True,
+            Beat.created_at >= fresh_cutoff
+        ).order_by(Beat.created_at.desc()).limit(8).all()
+
+        if len(fresh) < 4:
+            fresh_cutoff = datetime.utcnow() - timedelta(days=7)
+            fresh = Beat.query.filter(
+                Beat.is_active == True,
+                Beat.created_at >= fresh_cutoff
+            ).order_by(Beat.created_at.desc()).limit(8).all()
+
+        # Top creators
+        top_creators = db.session.query(
+            User.id, User.first_name, User.surname,
+            db.func.count(Beat.id).label('beat_count'),
+            db.func.sum(Beat.download_count).label('total_downloads')
+        ).join(Beat).filter(Beat.is_active == True).group_by(
+            User.id
+        ).order_by(db.desc('total_downloads')).limit(6).all()
+
+        # User's library beat IDs (to show owned status)
+        owned_beat_ids = [lib.beat_id for lib in UserBeatLibrary.query.filter_by(
+            user_id=user_id
+        ).all()]
+
+        return jsonify({
+            'hero': hero_beat.to_dict() if hero_beat else None,
+            'new_releases': [b.to_dict() for b in new_releases],
+            'trending': [b.to_dict() for b in trending],
+            'fresh': [b.to_dict() for b in fresh],
+            'top_creators': [{
+                'id': c.id,
+                'name': f"{c.first_name} {c.surname}",
+                'beat_count': c.beat_count,
+                'total_downloads': c.total_downloads or 0
+            } for c in top_creators],
+            'owned_beat_ids': owned_beat_ids
+        })
+    except Exception as e:
+        print(f"Error in beatpax explore: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Failed to load catalog'}), 500
+
+
+@app.route('/api/beatpax/beats')
+@login_required
+def beatpax_beats():
+    """Get beats with optional filtering"""
+    genre = request.args.get('genre')
+    search = request.args.get('search')
+    sort = request.args.get('sort', 'newest')
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+
+    try:
+        query = Beat.query.filter_by(is_active=True)
+
+        if genre and genre != 'all':
+            query = query.filter_by(genre=genre)
+
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(
+                db.or_(
+                    Beat.title.ilike(search_term),
+                    Beat.tags.ilike(search_term)
+                )
+            )
+
+        if sort == 'newest':
+            query = query.order_by(Beat.created_at.desc())
+        elif sort == 'popular':
+            query = query.order_by(Beat.download_count.desc())
+        elif sort == 'trending':
+            query = query.order_by(Beat.play_count.desc())
+        elif sort == 'price_low':
+            query = query.order_by(Beat.token_cost.asc())
+        elif sort == 'price_high':
+            query = query.order_by(Beat.token_cost.desc())
+
+        paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+
+        return jsonify({
+            'beats': [b.to_dict() for b in paginated.items],
+            'total': paginated.total,
+            'pages': paginated.pages,
+            'current_page': page
+        })
+    except Exception as e:
+        print(f"Error fetching beats: {e}")
+        return jsonify({'error': 'Failed to fetch beats'}), 500
+
+
+@app.route('/api/beatpax/upload', methods=['POST'])
+@login_required
+def beatpax_upload():
+    """Upload a new beat"""
+    user_id = session.get('user_id')
+
+    try:
+        # Get form data
+        title = request.form.get('title', '').strip()
+        genre = request.form.get('genre', '').strip()
+        bpm = request.form.get('bpm', type=int)
+        key = request.form.get('key', '').strip()
+        tags = request.form.get('tags', '').strip()
+        token_cost = request.form.get('token_cost', 5, type=int)
+
+        # Validate required fields
+        if not title:
+            return jsonify({'error': 'Title is required'}), 400
+        if not genre:
+            return jsonify({'error': 'Genre is required'}), 400
+
+        # Get audio file
+        audio_file = request.files.get('audio')
+        if not audio_file or not audio_file.filename:
+            return jsonify({'error': 'Audio file is required'}), 400
+
+        if not allowed_audio_file(audio_file.filename):
+            return jsonify({'error': 'Invalid audio format. Allowed: MP3, WAV, FLAC, M4A'}), 400
+
+        # Check file size
+        audio_file.seek(0, 2)
+        audio_size = audio_file.tell()
+        audio_file.seek(0)
+
+        if audio_size > MAX_AUDIO_SIZE:
+            return jsonify({'error': 'Audio file too large. Maximum 50MB'}), 400
+
+        # Generate unique filename
+        audio_filename = generate_unique_filename(audio_file.filename)
+
+        # Get MIME type
+        audio_mime = audio_file.content_type or mimetypes.guess_type(audio_file.filename)[0] or 'audio/mpeg'
+
+        # Upload audio to Blob storage
+        if blob_storage.is_blob_configured():
+            audio_path = blob_storage.generate_blob_path('beats/audio', audio_filename)
+            audio_url, _ = blob_storage.upload_file(audio_file, audio_path, audio_mime)
+        else:
+            # Fallback to local storage
+            audio_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'beats', 'audio')
+            os.makedirs(audio_dir, exist_ok=True)
+            audio_local_path = os.path.join(audio_dir, audio_filename)
+            audio_file.save(audio_local_path)
+            audio_url = f'/uploads/beats/audio/{audio_filename}'
+
+        # Handle cover image (optional)
+        cover_url = None
+        cover_file = request.files.get('cover')
+        if cover_file and cover_file.filename:
+            if allowed_image_file(cover_file.filename):
+                cover_file.seek(0, 2)
+                cover_size = cover_file.tell()
+                cover_file.seek(0)
+
+                if cover_size <= MAX_IMAGE_SIZE:
+                    cover_filename = generate_unique_filename(cover_file.filename)
+                    cover_mime = cover_file.content_type or mimetypes.guess_type(cover_file.filename)[0] or 'image/jpeg'
+
+                    if blob_storage.is_blob_configured():
+                        cover_path = blob_storage.generate_blob_path('beats/covers', cover_filename)
+                        cover_url, _ = blob_storage.upload_file(cover_file, cover_path, cover_mime)
+                    else:
+                        cover_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'beats', 'covers')
+                        os.makedirs(cover_dir, exist_ok=True)
+                        cover_local_path = os.path.join(cover_dir, cover_filename)
+                        cover_file.save(cover_local_path)
+                        cover_url = f'/uploads/beats/covers/{cover_filename}'
+
+        # Validate token cost
+        token_cost = max(3, min(20, token_cost))  # Between 3 and 20
+
+        # Create beat record
+        beat = Beat(
+            title=title,
+            creator_id=user_id,
+            audio_url=audio_url,
+            cover_url=cover_url,
+            genre=genre,
+            bpm=bpm,
+            key=key,
+            tags=tags,
+            token_cost=token_cost
+        )
+
+        db.session.add(beat)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'beat': beat.to_dict(),
+            'message': 'Beat uploaded successfully!'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error uploading beat: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Failed to upload beat'}), 500
+
+
+@app.route('/api/beatpax/beats/<int:beat_id>/play', methods=['POST'])
+@login_required
+def beatpax_play(beat_id):
+    """Record a play (free action)"""
+    try:
+        beat = Beat.query.get(beat_id)
+        if not beat or not beat.is_active:
+            return jsonify({'error': 'Beat not found'}), 404
+
+        beat.play_count += 1
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'play_count': beat.play_count
+        })
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error recording play: {e}")
+        return jsonify({'error': 'Failed to record play'}), 500
+
+
+@app.route('/api/beatpax/beats/<int:beat_id>/download', methods=['POST'])
+@login_required
+def beatpax_download(beat_id):
+    """Download a beat (spend tokens)"""
+    user_id = session.get('user_id')
+
+    try:
+        beat = Beat.query.get(beat_id)
+        if not beat or not beat.is_active:
+            return jsonify({'error': 'Beat not found'}), 404
+
+        # Check if already owned
+        existing = UserBeatLibrary.query.filter_by(
+            user_id=user_id, beat_id=beat_id
+        ).first()
+
+        if existing:
+            # Already owned - just increment download count
+            existing.download_count += 1
+            existing.downloaded_at = datetime.utcnow()
+            db.session.commit()
+            return jsonify({
+                'success': True,
+                'already_owned': True,
+                'audio_url': beat.audio_url,
+                'message': 'You already own this beat!'
+            })
+
+        # Check wallet balance
+        wallet = get_or_create_wallet(user_id)
+        if wallet.balance < beat.token_cost:
+            return jsonify({
+                'error': 'Insufficient tokens',
+                'required': beat.token_cost,
+                'balance': wallet.balance
+            }), 400
+
+        # Deduct tokens from buyer
+        wallet.balance -= beat.token_cost
+        wallet.total_spent += beat.token_cost
+
+        # Record buyer's transaction
+        buyer_transaction = Transaction(
+            user_id=user_id,
+            transaction_type='spend',
+            amount=-beat.token_cost,
+            balance_after=wallet.balance,
+            reference_type='beat_download',
+            reference_id=beat_id,
+            description=f'Downloaded: {beat.title}'
+        )
+        db.session.add(buyer_transaction)
+
+        # Credit creator (80% of token cost)
+        creator_earnings = int(beat.token_cost * 0.8)
+        creator_wallet = get_or_create_wallet(beat.creator_id)
+        creator_wallet.balance += creator_earnings
+        creator_wallet.total_earned += creator_earnings
+
+        # Record creator's transaction
+        creator_transaction = Transaction(
+            user_id=beat.creator_id,
+            transaction_type='earn',
+            amount=creator_earnings,
+            balance_after=creator_wallet.balance,
+            reference_type='beat_sale',
+            reference_id=beat_id,
+            description=f'Sale: {beat.title}'
+        )
+        db.session.add(creator_transaction)
+
+        # Add to user's library
+        library_entry = UserBeatLibrary(
+            user_id=user_id,
+            beat_id=beat_id,
+            tokens_spent=beat.token_cost,
+            downloaded_at=datetime.utcnow(),
+            download_count=1
+        )
+        db.session.add(library_entry)
+
+        # Increment beat download count
+        beat.download_count += 1
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'audio_url': beat.audio_url,
+            'tokens_spent': beat.token_cost,
+            'new_balance': wallet.balance,
+            'message': f'Downloaded! {beat.token_cost} tokens spent.'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error downloading beat: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Failed to download beat'}), 500
+
+
+# Token API Endpoints
+@app.route('/api/tokens/balance')
+@login_required
+def get_token_balance():
+    """Get user's token balance"""
+    user_id = session.get('user_id')
+    wallet = get_or_create_wallet(user_id)
+    return jsonify({
+        'balance': wallet.balance,
+        'total_spent': wallet.total_spent,
+        'total_earned': wallet.total_earned
+    })
+
+
+@app.route('/api/tokens/purchase', methods=['POST'])
+@login_required
+def purchase_tokens():
+    """Purchase tokens (stub - would integrate payment)"""
+    user_id = session.get('user_id')
+    data = request.get_json()
+    package = data.get('package')
+
+    # Token packages (stub pricing)
+    packages = {
+        '100': {'tokens': 100, 'price': 4.99},
+        '250': {'tokens': 250, 'price': 9.99},
+        '500': {'tokens': 500, 'price': 17.99},
+        '1000': {'tokens': 1000, 'price': 29.99}
+    }
+
+    if package not in packages:
+        return jsonify({'error': 'Invalid package'}), 400
+
+    pkg = packages[package]
+
+    try:
+        wallet = get_or_create_wallet(user_id)
+        wallet.balance += pkg['tokens']
+
+        transaction = Transaction(
+            user_id=user_id,
+            transaction_type='purchase',
+            amount=pkg['tokens'],
+            balance_after=wallet.balance,
+            reference_type='token_purchase',
+            description=f"Purchased {pkg['tokens']} tokens"
+        )
+        db.session.add(transaction)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'tokens_added': pkg['tokens'],
+            'new_balance': wallet.balance,
+            'message': f"Added {pkg['tokens']} tokens!"
+        })
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error purchasing tokens: {e}")
+        return jsonify({'error': 'Failed to purchase tokens'}), 500
+
+
+@app.route('/api/tokens/transactions')
+@login_required
+def get_transactions():
+    """Get user's transaction history"""
+    user_id = session.get('user_id')
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+
+    try:
+        paginated = Transaction.query.filter_by(user_id=user_id).order_by(
+            Transaction.created_at.desc()
+        ).paginate(page=page, per_page=per_page, error_out=False)
+
+        return jsonify({
+            'transactions': [t.to_dict() for t in paginated.items],
+            'total': paginated.total,
+            'pages': paginated.pages,
+            'current_page': page
+        })
+    except Exception as e:
+        print(f"Error fetching transactions: {e}")
+        return jsonify({'error': 'Failed to fetch transactions'}), 500
+
+
+@app.route('/api/beatpax/library')
+@login_required
+def get_user_library():
+    """Get user's beat library"""
+    user_id = session.get('user_id')
+
+    try:
+        library = UserBeatLibrary.query.filter_by(user_id=user_id).order_by(
+            UserBeatLibrary.purchased_at.desc()
+        ).all()
+
+        return jsonify({
+            'library': [entry.to_dict() for entry in library],
+            'count': len(library)
+        })
+    except Exception as e:
+        print(f"Error fetching library: {e}")
+        return jsonify({'error': 'Failed to fetch library'}), 500
+
+
+@app.route('/api/beatpax/my-beats')
+@login_required
+def get_my_beats():
+    """Get beats uploaded by the current user"""
+    user_id = session.get('user_id')
+
+    try:
+        beats = Beat.query.filter_by(creator_id=user_id).order_by(
+            Beat.created_at.desc()
+        ).all()
+
+        return jsonify({
+            'beats': [b.to_dict() for b in beats],
+            'count': len(beats)
+        })
+    except Exception as e:
+        print(f"Error fetching my beats: {e}")
+        return jsonify({'error': 'Failed to fetch beats'}), 500
+
 
 # Create database tables on app startup (only in development)
 # On Vercel, use Vercel Postgres and run migrations separately
