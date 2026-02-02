@@ -1386,7 +1386,7 @@
                     <i data-lucide="x" class="lucide-icon"></i>
                 </button>
             </div>
-            <form class="upload-form" id="uploadForm">
+            <form class="upload-form" id="uploadForm" enctype="multipart/form-data">
                 <div class="form-group">
                     <label class="form-label">Title *</label>
                     <input type="text" class="form-input" name="title" placeholder="Beat title" required>
@@ -1946,8 +1946,36 @@
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const formData = new FormData(e.target);
+            const form = e.target;
+            const audioInput = form.querySelector('input[name="audio"]');
+            const titleInput = form.querySelector('input[name="title"]');
+            const genreInput = form.querySelector('select[name="genre"]');
             const submitBtn = document.getElementById('uploadSubmit');
+
+            // Validate before submitting
+            if (!titleInput.value.trim()) {
+                showToast('Please enter a title', 'error');
+                return;
+            }
+
+            if (!genreInput.value) {
+                showToast('Please select a genre', 'error');
+                return;
+            }
+
+            if (!audioInput.files || !audioInput.files.length) {
+                showToast('Please select an audio file', 'error');
+                return;
+            }
+
+            const audioFile = audioInput.files[0];
+            const maxSize = 50 * 1024 * 1024; // 50MB
+            if (audioFile.size > maxSize) {
+                showToast('Audio file too large. Maximum 50MB', 'error');
+                return;
+            }
+
+            const formData = new FormData(form);
 
             submitBtn.disabled = true;
             submitBtn.textContent = 'Uploading...';
@@ -1960,14 +1988,14 @@
 
                 const data = await response.json();
 
-                if (data.error) {
-                    showToast(data.error, 'error');
+                if (!response.ok || data.error) {
+                    showToast(data.error || 'Upload failed', 'error');
                     return;
                 }
 
                 showToast(data.message || 'Beat uploaded!', 'success');
                 uploadPanel.classList.remove('active');
-                e.target.reset();
+                form.reset();
                 document.getElementById('audioFileName').textContent = '';
                 document.getElementById('coverFileName').textContent = '';
                 audioUpload.classList.remove('has-file');
@@ -1979,7 +2007,7 @@
 
             } catch (error) {
                 console.error('Error uploading:', error);
-                showToast('Failed to upload', 'error');
+                showToast('Upload failed. Please try again.', 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Upload Beat';

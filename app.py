@@ -64,10 +64,15 @@ if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgresql://'):
             'keepalives_count': 5
         }
     }
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size for beat uploads
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 
 CORS(app)
+
+# Error handler for file too large
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return jsonify({'error': 'File too large. Maximum size is 50MB'}), 413
 
 # Initialize database
 db.init_app(app)
