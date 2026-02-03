@@ -326,6 +326,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 12px;
             opacity: 0;
             transition: opacity 0.2s;
         }
@@ -356,6 +357,33 @@
             height: 24px;
             color: #000000;
             margin-left: 2px;
+        }
+
+        .share-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .share-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.1);
+        }
+
+        .share-btn .lucide-icon {
+            width: 18px;
+            height: 18px;
+            color: #fff;
         }
 
         .beat-info {
@@ -1212,6 +1240,15 @@
 
         .upload-card-actions .delete-btn:hover {
             background: rgba(255, 68, 68, 0.2);
+        }
+
+        .upload-card-actions .share-btn {
+            background: rgba(74, 158, 255, 0.1);
+            color: #4a9eff;
+        }
+
+        .upload-card-actions .share-btn:hover {
+            background: rgba(74, 158, 255, 0.2);
         }
 
         .upload-card-tracks {
@@ -2424,6 +2461,9 @@
                         </div>
                     ` : ''}
                     <div class="upload-card-actions">
+                        <button class="share-btn" onclick="sharePack(${pack.id}, 'pack')">
+                            <i data-lucide="share-2" class="lucide-icon"></i> Share
+                        </button>
                         <button class="edit-btn" onclick="openEditPack(${pack.id})">
                             <i data-lucide="edit-2" class="lucide-icon"></i> Edit
                         </button>
@@ -2878,6 +2918,9 @@
         // Create beat card HTML
         function createBeatCard(beat) {
             const owned = ownedBeatIds.includes(beat.id);
+            // Use sound_pack_id for share link if available, otherwise use beat id
+            const shareId = beat.sound_pack_id || beat.id;
+            const shareType = beat.sound_pack_id ? 'pack' : 'beat';
             return `
                 <div class="beat-card" data-beat-id="${beat.id}" onclick="playBeat(${beat.id})">
                     <div class="beat-cover">
@@ -2886,6 +2929,9 @@
                             `<div class="placeholder-icon"><i data-lucide="music" class="lucide-icon"></i></div>`
                         }
                         <div class="beat-play-overlay">
+                            <button class="share-btn" onclick="event.stopPropagation(); sharePack(${shareId}, '${shareType}')" title="Share">
+                                <i data-lucide="share-2" class="lucide-icon"></i>
+                            </button>
                             <button class="play-btn">
                                 <i data-lucide="play" class="lucide-icon"></i>
                             </button>
@@ -2904,6 +2950,26 @@
                     </div>
                 </div>
             `;
+        }
+
+        // Share pack/beat
+        function sharePack(id, type) {
+            const url = type === 'pack'
+                ? `${window.location.origin}/beatpax/pack/${id}`
+                : `${window.location.origin}/beatpax/pack/${id}`;
+
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('Share link copied to clipboard!', 'success');
+            }).catch(() => {
+                // Fallback for older browsers
+                const input = document.createElement('input');
+                input.value = url;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showToast('Share link copied to clipboard!', 'success');
+            });
         }
 
         // Create lower beat item HTML

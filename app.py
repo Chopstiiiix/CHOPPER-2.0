@@ -2406,6 +2406,56 @@ def delete_track(track_id):
         return jsonify({'error': 'Failed to delete track'}), 500
 
 
+# =============================================================================
+# Public Share Routes for Beatpax
+# =============================================================================
+
+@app.route('/beatpax/pack/<int:pack_id>')
+def beatpax_share_pack(pack_id):
+    """Public page to view a shared sound pack - no login required"""
+    try:
+        pack = SoundPack.query.get(pack_id)
+        if not pack or not pack.is_active:
+            return render_template('beatpax_share.html', pack=None, error='Sound pack not found')
+
+        # Get pack data with tracks
+        pack_data = pack.to_dict(include_tracks=True)
+
+        # Check if user is logged in for download capability
+        is_logged_in = session.get('authenticated', False)
+        user_id = session.get('user_id')
+        wallet_balance = 0
+
+        if is_logged_in and user_id:
+            wallet = Wallet.query.filter_by(user_id=user_id).first()
+            wallet_balance = wallet.balance if wallet else 0
+
+        return render_template('beatpax_share.html',
+                               pack=pack_data,
+                               is_logged_in=is_logged_in,
+                               wallet_balance=wallet_balance,
+                               error=None)
+    except Exception as e:
+        print(f"Error loading shared pack: {e}")
+        return render_template('beatpax_share.html', pack=None, error='Failed to load sound pack')
+
+
+@app.route('/api/beatpax/pack/<int:pack_id>/public')
+def beatpax_public_pack(pack_id):
+    """Public API to get sound pack data - no login required"""
+    try:
+        pack = SoundPack.query.get(pack_id)
+        if not pack or not pack.is_active:
+            return jsonify({'error': 'Sound pack not found'}), 404
+
+        return jsonify({
+            'pack': pack.to_dict(include_tracks=True)
+        })
+    except Exception as e:
+        print(f"Error fetching public pack: {e}")
+        return jsonify({'error': 'Failed to fetch sound pack'}), 500
+
+
 # Create database tables on app startup (only in development)
 # On Vercel, use Vercel Postgres and run migrations separately
 if not os.environ.get('VERCEL'):
