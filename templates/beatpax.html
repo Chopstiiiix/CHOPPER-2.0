@@ -838,40 +838,105 @@
             border-bottom: 1px solid #2d2d2d;
         }
 
+        /* Track attachment area */
+        .track-attachment-area {
+            border: 2px dashed #2d2d2d;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #0d0d0d;
+        }
+
+        .track-attachment-area:hover {
+            border-color: #444;
+            background: #111;
+        }
+
+        .track-attachment-area.drag-over {
+            border-color: #fff;
+            background: #1a1a1a;
+        }
+
+        .track-attachment-area.has-files {
+            border-style: solid;
+            border-color: #2d2d2d;
+            padding: 12px;
+        }
+
+        .track-attachment-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            color: #444;
+        }
+
+        .track-attachment-text {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .track-attachment-hint {
+            color: #555;
+            font-size: 12px;
+        }
+
         /* Track list */
         .track-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            max-height: 300px;
+            gap: 10px;
+            max-height: 350px;
             overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .track-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .track-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .track-list::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 2px;
         }
 
         .track-item {
             background: #1a1a1a;
             border: 1px solid #2d2d2d;
             border-radius: 10px;
-            padding: 12px;
+            padding: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .track-item:hover {
+            border-color: #3d3d3d;
         }
 
         .track-item-header {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .track-number {
-            width: 24px;
-            height: 24px;
-            background: #2d2d2d;
+            width: 26px;
+            height: 26px;
+            background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+            border: 1px solid #3d3d3d;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 12px;
             font-weight: 600;
-            color: #999;
+            color: #888;
             flex-shrink: 0;
         }
 
@@ -884,22 +949,44 @@
             text-overflow: ellipsis;
         }
 
+        .track-filesize {
+            font-size: 11px;
+            color: #444;
+            padding: 2px 6px;
+            background: #0d0d0d;
+            border-radius: 4px;
+        }
+
         .track-remove {
             background: none;
             border: none;
-            color: #666;
+            color: #555;
             cursor: pointer;
             padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
         }
 
         .track-remove:hover {
             color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
         }
 
         .track-fields {
             display: grid;
             grid-template-columns: 1fr 80px 100px;
-            gap: 8px;
+            gap: 10px;
+        }
+
+        @media (max-width: 500px) {
+            .track-fields {
+                grid-template-columns: 1fr;
+            }
+            .track-fields .track-field:nth-child(2),
+            .track-fields .track-field:nth-child(3) {
+                display: inline-block;
+                width: calc(50% - 5px);
+            }
         }
 
         .track-field input {
@@ -907,26 +994,75 @@
             background: #0d0d0d;
             border: 1px solid #2d2d2d;
             border-radius: 6px;
-            padding: 8px 10px;
+            padding: 10px 12px;
             color: #fff;
             font-size: 13px;
+            transition: border-color 0.2s ease;
         }
 
         .track-field input:focus {
-            border-color: #fff;
+            border-color: #555;
             outline: none;
         }
 
         .track-field input::placeholder {
-            color: #555;
+            color: #444;
         }
 
         .track-field-label {
             font-size: 10px;
-            color: #666;
-            margin-bottom: 4px;
+            color: #555;
+            margin-bottom: 5px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        /* Add more tracks button */
+        .add-more-tracks {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background: transparent;
+            border: 1px dashed #2d2d2d;
+            border-radius: 8px;
+            color: #666;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-more-tracks:hover {
+            border-color: #444;
+            color: #888;
+            background: #111;
+        }
+
+        .add-more-tracks .lucide-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Track count badge */
+        .track-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #1a1a1a;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+
+        .track-count-badge .lucide-icon {
+            width: 14px;
+            height: 14px;
         }
 
         /* My Uploads styles */
@@ -1919,22 +2055,28 @@
 
                 <!-- Tracks Section -->
                 <div class="form-section">
-                    <div class="section-header">Tracks</div>
+                    <div class="section-header">Audio Files</div>
 
                     <div class="form-group">
-                        <label class="form-label">Audio Files * (MP3, WAV, FLAC)</label>
-                        <div class="file-upload" id="audioUpload">
-                            <i data-lucide="music" class="lucide-icon"></i>
-                            <p>Click to select audio files</p>
-                            <p class="file-hint">Select all tracks for this pack</p>
-                            <input type="file" name="audio" accept=".mp3,.wav,.flac,.m4a" multiple required>
+                        <div class="track-attachment-area" id="trackAttachmentArea">
+                            <div class="attachment-empty-state" id="attachmentEmptyState">
+                                <i data-lucide="music-2" class="lucide-icon track-attachment-icon"></i>
+                                <p class="track-attachment-text">Drop audio files here or click to browse</p>
+                                <p class="track-attachment-hint">MP3, WAV, FLAC, M4A • Add as many tracks as you need</p>
+                            </div>
+                            <div id="attachedTracksContainer" style="display: none;">
+                                <div class="track-count-badge" id="trackCountBadge">
+                                    <i data-lucide="music" class="lucide-icon"></i>
+                                    <span id="trackCountText">0 tracks attached</span>
+                                </div>
+                                <div class="track-list" id="fileList"></div>
+                                <button type="button" class="add-more-tracks" id="addMoreTracksBtn">
+                                    <i data-lucide="plus" class="lucide-icon"></i>
+                                    Add more tracks
+                                </button>
+                            </div>
+                            <input type="file" id="audioFileInput" name="audio" accept=".mp3,.wav,.flac,.m4a" multiple style="display: none;">
                         </div>
-                    </div>
-
-                    <!-- Dynamic track list with individual metadata -->
-                    <div class="form-group" id="fileListContainer" style="display: none;">
-                        <label class="form-label">Track Details <span class="label-hint">(name, BPM, key for each)</span></label>
-                        <div class="track-list" id="fileList"></div>
                     </div>
                 </div>
 
@@ -2522,94 +2664,10 @@
         });
 
         // File uploads
-        const audioUpload = document.getElementById('audioUpload');
         const coverUpload = document.getElementById('coverUpload');
-
-        audioUpload.addEventListener('click', () => {
-            audioUpload.querySelector('input').click();
-        });
 
         coverUpload.addEventListener('click', () => {
             coverUpload.querySelector('input').click();
-        });
-
-        // Track selected files for multi-upload
-        let selectedAudioFiles = [];
-
-        audioUpload.querySelector('input').addEventListener('change', (e) => {
-            const files = Array.from(e.target.files);
-            if (files.length) {
-                selectedAudioFiles = files;
-                audioUpload.classList.add('has-file');
-
-                // Show track list
-                const fileListContainer = document.getElementById('fileListContainer');
-                const fileList = document.getElementById('fileList');
-                fileListContainer.style.display = 'block';
-
-                // Generate track list with individual fields (name, BPM, key)
-                fileList.innerHTML = files.map((file, index) => {
-                    // Generate default title from filename (remove extension)
-                    const defaultTitle = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-                    const fileSize = (file.size / (1024 * 1024)).toFixed(1);
-
-                    return `
-                        <div class="track-item" data-index="${index}">
-                            <div class="track-item-header">
-                                <span class="track-number">${index + 1}</span>
-                                <span class="track-filename">${file.name} (${fileSize} MB)</span>
-                                <button type="button" class="track-remove" data-index="${index}">
-                                    <i data-lucide="x" class="lucide-icon"></i>
-                                </button>
-                            </div>
-                            <div class="track-fields">
-                                <div class="track-field">
-                                    <div class="track-field-label">Track Name</div>
-                                    <input type="text" class="track-title-input"
-                                           data-index="${index}"
-                                           value="${defaultTitle}"
-                                           placeholder="Track name">
-                                </div>
-                                <div class="track-field">
-                                    <div class="track-field-label">BPM</div>
-                                    <input type="number" class="track-bpm-input"
-                                           data-index="${index}"
-                                           placeholder="140"
-                                           min="60" max="200">
-                                </div>
-                                <div class="track-field">
-                                    <div class="track-field-label">Key</div>
-                                    <input type="text" class="track-key-input"
-                                           data-index="${index}"
-                                           placeholder="C minor">
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                lucide.createIcons();
-
-                // Add remove handlers
-                fileList.querySelectorAll('.track-remove').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const index = parseInt(btn.dataset.index);
-                        selectedAudioFiles = selectedAudioFiles.filter((_, i) => i !== index);
-
-                        // Re-render list
-                        if (selectedAudioFiles.length === 0) {
-                            fileListContainer.style.display = 'none';
-                            audioUpload.classList.remove('has-file');
-                        } else {
-                            // Trigger change event to re-render
-                            const dt = new DataTransfer();
-                            selectedAudioFiles.forEach(f => dt.items.add(f));
-                            audioUpload.querySelector('input').files = dt.files;
-                            audioUpload.querySelector('input').dispatchEvent(new Event('change'));
-                        }
-                    });
-                });
-            }
         });
 
         coverUpload.querySelector('input').addEventListener('change', (e) => {
@@ -2618,6 +2676,172 @@
                 coverUpload.classList.add('has-file');
             }
         });
+
+        // Track attachment system
+        let selectedAudioFiles = [];
+        const trackAttachmentArea = document.getElementById('trackAttachmentArea');
+        const audioFileInput = document.getElementById('audioFileInput');
+        const attachmentEmptyState = document.getElementById('attachmentEmptyState');
+        const attachedTracksContainer = document.getElementById('attachedTracksContainer');
+        const fileList = document.getElementById('fileList');
+        const trackCountBadge = document.getElementById('trackCountBadge');
+        const trackCountText = document.getElementById('trackCountText');
+        const addMoreTracksBtn = document.getElementById('addMoreTracksBtn');
+
+        // Click to browse files
+        trackAttachmentArea.addEventListener('click', (e) => {
+            // Don't trigger if clicking on track inputs or buttons
+            if (e.target.closest('.track-item') || e.target.closest('.add-more-tracks')) return;
+            audioFileInput.click();
+        });
+
+        // Add more tracks button
+        addMoreTracksBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            audioFileInput.click();
+        });
+
+        // Drag and drop handlers
+        trackAttachmentArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            trackAttachmentArea.classList.add('drag-over');
+        });
+
+        trackAttachmentArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            trackAttachmentArea.classList.remove('drag-over');
+        });
+
+        trackAttachmentArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            trackAttachmentArea.classList.remove('drag-over');
+
+            const files = Array.from(e.dataTransfer.files).filter(f =>
+                f.type.startsWith('audio/') ||
+                f.name.match(/\.(mp3|wav|flac|m4a)$/i)
+            );
+
+            if (files.length > 0) {
+                addFilesToTrackList(files);
+            }
+        });
+
+        // File input change handler
+        audioFileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length > 0) {
+                addFilesToTrackList(files);
+            }
+            // Reset input so same file can be selected again
+            audioFileInput.value = '';
+        });
+
+        // Add files to track list (incremental - doesn't replace)
+        function addFilesToTrackList(newFiles) {
+            // Add to existing files
+            selectedAudioFiles = [...selectedAudioFiles, ...newFiles];
+
+            // Update UI
+            trackAttachmentArea.classList.add('has-files');
+            attachmentEmptyState.style.display = 'none';
+            attachedTracksContainer.style.display = 'block';
+
+            // Update track count
+            updateTrackCount();
+
+            // Render the track list
+            renderTrackList();
+        }
+
+        function updateTrackCount() {
+            const count = selectedAudioFiles.length;
+            trackCountText.textContent = `${count} track${count !== 1 ? 's' : ''} attached`;
+        }
+
+        function renderTrackList() {
+            fileList.innerHTML = selectedAudioFiles.map((file, index) => {
+                // Get existing values if any (for re-renders)
+                const existingItem = fileList.querySelector(`[data-file-id="${file.name}-${file.size}"]`);
+                const existingTitle = existingItem?.querySelector('.track-title-input')?.value;
+                const existingBpm = existingItem?.querySelector('.track-bpm-input')?.value;
+                const existingKey = existingItem?.querySelector('.track-key-input')?.value;
+
+                // Generate default title from filename (remove extension)
+                const defaultTitle = existingTitle || file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+                const fileSize = (file.size / (1024 * 1024)).toFixed(1);
+
+                return `
+                    <div class="track-item" data-index="${index}" data-file-id="${file.name}-${file.size}">
+                        <div class="track-item-header">
+                            <span class="track-number">${index + 1}</span>
+                            <span class="track-filename">${file.name}</span>
+                            <span class="track-filesize">${fileSize} MB</span>
+                            <button type="button" class="track-remove" data-index="${index}" title="Remove track">
+                                <i data-lucide="x" class="lucide-icon"></i>
+                            </button>
+                        </div>
+                        <div class="track-fields">
+                            <div class="track-field">
+                                <div class="track-field-label">Track Name</div>
+                                <input type="text" class="track-title-input"
+                                       data-index="${index}"
+                                       value="${defaultTitle}"
+                                       placeholder="Enter track name">
+                            </div>
+                            <div class="track-field">
+                                <div class="track-field-label">BPM</div>
+                                <input type="number" class="track-bpm-input"
+                                       data-index="${index}"
+                                       value="${existingBpm || ''}"
+                                       placeholder="e.g. 140"
+                                       min="40" max="300">
+                            </div>
+                            <div class="track-field">
+                                <div class="track-field-label">Key</div>
+                                <input type="text" class="track-key-input"
+                                       data-index="${index}"
+                                       value="${existingKey || ''}"
+                                       placeholder="e.g. C minor">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+
+            // Add remove handlers
+            fileList.querySelectorAll('.track-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const index = parseInt(btn.dataset.index);
+                    removeTrackAtIndex(index);
+                });
+            });
+        }
+
+        function removeTrackAtIndex(index) {
+            selectedAudioFiles = selectedAudioFiles.filter((_, i) => i !== index);
+
+            if (selectedAudioFiles.length === 0) {
+                // Reset to empty state
+                trackAttachmentArea.classList.remove('has-files');
+                attachmentEmptyState.style.display = 'block';
+                attachedTracksContainer.style.display = 'none';
+                fileList.innerHTML = '';
+            } else {
+                updateTrackCount();
+                renderTrackList();
+            }
+        }
+
+        function resetTrackAttachment() {
+            selectedAudioFiles = [];
+            trackAttachmentArea.classList.remove('has-files');
+            attachmentEmptyState.style.display = 'block';
+            attachedTracksContainer.style.display = 'none';
+            fileList.innerHTML = '';
+        }
 
         // Token slider
         const tokenSlider = document.getElementById('tokenSlider');
@@ -3173,11 +3397,8 @@
             setTimeout(() => {
                 uploadPanel.classList.remove('active');
                 form.reset();
-                selectedAudioFiles = [];
-                document.getElementById('fileListContainer').style.display = 'none';
-                document.getElementById('fileList').innerHTML = '';
+                resetTrackAttachment();
                 document.getElementById('coverFileName').textContent = '';
-                audioUpload.classList.remove('has-file');
                 coverUpload.classList.remove('has-file');
                 document.getElementById('tokenSliderValue').textContent = '15 tokens';
                 progressContainer.style.display = 'none';
