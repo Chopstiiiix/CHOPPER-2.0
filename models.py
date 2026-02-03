@@ -334,6 +334,8 @@ class SoundPack(db.Model):
     tracks = db.relationship('Beat', backref='sound_pack', lazy=True)
 
     def to_dict(self, include_tracks=False):
+        # Token cost = 1 token per track
+        calculated_token_cost = self.track_count if self.track_count else len([t for t in self.tracks if t.is_active])
         data = {
             'id': self.id,
             'name': self.name,
@@ -343,7 +345,8 @@ class SoundPack(db.Model):
             'genre': self.genre,
             'description': self.description,
             'tags': self.tags.split(',') if self.tags else [],
-            'token_cost': self.token_cost,
+            'token_cost': calculated_token_cost,  # 1 token per track
+            'token_per_track': 1,  # Fixed price per individual track
             'play_count': self.play_count,
             'download_count': self.download_count,
             'track_count': self.track_count,
@@ -394,7 +397,7 @@ class Beat(db.Model):
             'bpm': self.bpm,
             'key': self.key,
             'tags': self.tags.split(',') if self.tags else [],
-            'token_cost': self.token_cost,
+            'token_cost': 1,  # Fixed: 1 token per track
             'play_count': self.play_count,
             'download_count': self.download_count,
             'track_number': self.track_number,

@@ -1734,7 +1734,6 @@ def beatpax_create_soundpack():
         cover_url = (data.get('cover_url') or '').strip() or None
         description = (data.get('description') or '').strip()
         tags = (data.get('tags') or '').strip()
-        token_cost = data.get('token_cost', 10)
         tracks_data = data.get('tracks', [])
 
         # Validate required fields
@@ -1752,8 +1751,9 @@ def beatpax_create_soundpack():
             if not track.get('title'):
                 return jsonify({'error': f'Track {i+1} is missing title'}), 400
 
-        # Validate token cost
-        token_cost = max(5, min(100, int(token_cost)))
+        # Token cost = 1 token per track (calculated automatically)
+        track_count = len(tracks_data)
+        token_cost = track_count  # 1 token per track
 
         # Create sound pack
         sound_pack = SoundPack(
@@ -1764,7 +1764,7 @@ def beatpax_create_soundpack():
             description=description,
             tags=tags,
             token_cost=token_cost,
-            track_count=len(tracks_data)
+            track_count=track_count
         )
         db.session.add(sound_pack)
         db.session.flush()  # Get the pack ID
@@ -2032,24 +2032,27 @@ def beatpax_download(beat_id):
                 'message': 'You already own this beat!'
             })
 
+        # Fixed cost: 1 token per beat
+        token_cost = 1
+
         # Check wallet balance
         wallet = get_or_create_wallet(user_id)
-        if wallet.balance < beat.token_cost:
+        if wallet.balance < token_cost:
             return jsonify({
                 'error': 'Insufficient tokens',
-                'required': beat.token_cost,
+                'required': token_cost,
                 'balance': wallet.balance
             }), 400
 
         # Deduct tokens from buyer
-        wallet.balance -= beat.token_cost
-        wallet.total_spent += beat.token_cost
+        wallet.balance -= token_cost
+        wallet.total_spent += token_cost
 
         # Record buyer's transaction
         buyer_transaction = Transaction(
             user_id=user_id,
             transaction_type='spend',
-            amount=-beat.token_cost,
+            amount=-token_cost,
             balance_after=wallet.balance,
             reference_type='beat_download',
             reference_id=beat_id,
@@ -2058,7 +2061,7 @@ def beatpax_download(beat_id):
         db.session.add(buyer_transaction)
 
         # Credit creator (80% of token cost)
-        creator_earnings = int(beat.token_cost * 0.8)
+        creator_earnings = max(1, int(token_cost * 0.8))  # Minimum 1 token for creator
         creator_wallet = get_or_create_wallet(beat.creator_id)
         creator_wallet.balance += creator_earnings
         creator_wallet.total_earned += creator_earnings
@@ -2079,7 +2082,7 @@ def beatpax_download(beat_id):
         library_entry = UserBeatLibrary(
             user_id=user_id,
             beat_id=beat_id,
-            tokens_spent=beat.token_cost,
+            tokens_spent=token_cost,
             downloaded_at=datetime.utcnow(),
             download_count=1
         )
@@ -2093,9 +2096,9 @@ def beatpax_download(beat_id):
         return jsonify({
             'success': True,
             'audio_url': beat.audio_url,
-            'tokens_spent': beat.token_cost,
+            'tokens_spent': token_cost,
             'new_balance': wallet.balance,
-            'message': f'Downloaded! {beat.token_cost} tokens spent.'
+            'message': f'Downloaded! {token_cost} token spent.'
         })
 
     except Exception as e:
@@ -2287,10 +2290,9 @@ def update_soundpack(pack_id):
             pack.description = data['description'].strip()
         if 'tags' in data:
             pack.tags = data['tags'].strip()
-        if 'token_cost' in data:
-            pack.token_cost = max(5, min(100, int(data['token_cost'])))
         if 'cover_url' in data:
             pack.cover_url = data['cover_url']
+        # Note: token_cost is automatically calculated as 1 per track
 
         db.session.commit()
 

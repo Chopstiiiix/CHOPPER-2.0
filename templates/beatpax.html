@@ -2296,6 +2296,29 @@
             color: #ffd700;
         }
 
+        .pricing-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            color: #ffd700;
+            font-weight: 500;
+        }
+
+        .pricing-info i {
+            width: 20px;
+            height: 20px;
+        }
+
+        .pricing-hint {
+            margin-left: auto;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
         .upload-submit {
             width: 100%;
             padding: 14px;
@@ -2981,10 +3004,11 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Token Price <span class="label-hint">(5-50 tokens for entire pack)</span></label>
-                        <div class="token-slider">
-                            <input type="range" name="token_cost" min="5" max="50" value="15" id="tokenSlider">
-                            <span class="token-value" id="tokenSliderValue">15 tokens</span>
+                        <label class="form-label">Token Price</label>
+                        <div class="pricing-info">
+                            <i data-lucide="coins" class="lucide-icon"></i>
+                            <span>1 token per track</span>
+                            <span class="pricing-hint">Pack price = number of tracks</span>
                         </div>
                     </div>
                 </div>
@@ -3135,8 +3159,11 @@
                     <input type="text" class="form-input" id="editPackTags" placeholder="dark, melodic, 808s">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Token Price (5-50)</label>
-                    <input type="number" class="form-input" id="editPackPrice" min="5" max="50">
+                    <label class="form-label">Token Price</label>
+                    <div class="pricing-info" id="editPackPriceInfo">
+                        <i data-lucide="coins" class="lucide-icon"></i>
+                        <span>1 token per track</span>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Tracks</label>
@@ -3529,7 +3556,7 @@
                 document.getElementById('editPackName').value = pack.name;
                 document.getElementById('editPackGenre').value = pack.genre;
                 document.getElementById('editPackTags').value = pack.tags ? pack.tags.join(', ') : '';
-                document.getElementById('editPackPrice').value = pack.token_cost;
+                // Token price is automatic (1 per track) - shown in pricing-info
 
                 // Render tracks
                 const tracksList = document.getElementById('editTracksList');
@@ -3562,14 +3589,13 @@
             const name = document.getElementById('editPackName').value.trim();
             const genre = document.getElementById('editPackGenre').value;
             const tags = document.getElementById('editPackTags').value.trim();
-            const tokenCost = document.getElementById('editPackPrice').value;
 
             try {
-                // Update pack info
+                // Update pack info (token cost is automatic - 1 per track)
                 const response = await fetch(`/api/beatpax/soundpacks/${packId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, genre, tags, token_cost: tokenCost })
+                    body: JSON.stringify({ name, genre, tags })
                 });
 
                 const data = await response.json();
@@ -3880,12 +3906,6 @@
             fileList.innerHTML = '';
         }
 
-        // Token slider
-        const tokenSlider = document.getElementById('tokenSlider');
-        tokenSlider.addEventListener('input', () => {
-            document.getElementById('tokenSliderValue').textContent = tokenSlider.value + ' tokens';
-        });
-
         // Genre filter
         document.querySelectorAll('.genre-pill').forEach(pill => {
             pill.addEventListener('click', () => {
@@ -3949,7 +3969,7 @@
                             <span class="beat-genre">${pack.genre}</span>
                             ${owned ?
                                 `<span class="beat-owned">Owned</span>` :
-                                `<span class="beat-price"><i data-lucide="coins" class="lucide-icon"></i> ${pack.token_cost}</span>`
+                                `<span class="beat-price"><i data-lucide="coins" class="lucide-icon"></i> ${trackCount} <small>(1/track)</small></span>`
                             }
                         </div>
                     </div>
@@ -3997,7 +4017,8 @@
             document.getElementById('packDetailTrackCount').textContent = `${pack.track_count || pack.tracks?.length || 0} tracks`;
             document.getElementById('packDetailPlayCount').textContent = `${pack.play_count || 0} plays`;
             document.getElementById('packDetailGenre').textContent = pack.genre;
-            document.getElementById('packDetailPrice').innerHTML = `<i data-lucide="coins" class="lucide-icon"></i> ${pack.token_cost} tokens`;
+            const packTrackCount = pack.track_count || pack.tracks?.length || 0;
+            document.getElementById('packDetailPrice').innerHTML = `<i data-lucide="coins" class="lucide-icon"></i> ${packTrackCount} tokens <small style="opacity: 0.7;">(1 per track)</small>`;
 
             // Populate tracks with like and download buttons
             const trackList = document.getElementById('packTrackList');
@@ -4366,7 +4387,7 @@
                         <div class="lower-beat-creator">${pack.creator_name || 'Unknown'} • ${trackCount} tracks</div>
                     </div>
                     <div class="lower-beat-price">
-                        <i data-lucide="coins" class="lucide-icon"></i> ${pack.token_cost}
+                        <i data-lucide="coins" class="lucide-icon"></i> ${trackCount}
                     </div>
                 </div>
             `;
@@ -4525,12 +4546,12 @@
                     lucide.createIcons();
                 }
 
-                // Update download button
+                // Update download button (fixed 1 token per track)
                 const downloadBtn = document.getElementById('downloadBtn');
                 if (ownedBeatIds.includes(beatId)) {
                     downloadBtn.textContent = 'Owned';
                 } else {
-                    downloadBtn.innerHTML = `<i data-lucide="download" class="lucide-icon"></i> ${currentBeat.token_cost} tokens`;
+                    downloadBtn.innerHTML = `<i data-lucide="download" class="lucide-icon"></i> 1 token`;
                     lucide.createIcons();
                 }
 
@@ -4744,7 +4765,6 @@
             const packName = packNameInput.value.trim();
             const genre = genreInput.value;
             const tags = form.querySelector('input[name="tags"]').value.trim();
-            const tokenCost = form.querySelector('input[name="token_cost"]').value;
 
             // Show progress
             submitBtn.disabled = true;
@@ -4822,7 +4842,6 @@
                         genre: genre,
                         cover_url: coverUrl,
                         tags: tags,
-                        token_cost: tokenCost,
                         tracks: uploadedTracks
                     })
                 });
@@ -4856,7 +4875,6 @@
                 resetTrackAttachment();
                 document.getElementById('coverFileName').textContent = '';
                 coverUpload.classList.remove('has-file');
-                document.getElementById('tokenSliderValue').textContent = '15 tokens';
                 progressContainer.style.display = 'none';
                 progressBar.style.width = '0%';
                 submitBtn.style.display = 'block';
