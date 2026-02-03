@@ -371,6 +371,14 @@
             display: flex;
             align-items: center;
             gap: 20px;
+            flex: 1;
+        }
+
+        .top-bar-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 2;
         }
 
         .logo {
@@ -390,8 +398,9 @@
             background: #1a1a1a;
             border: 1px solid #2d2d2d;
             border-radius: 8px;
-            padding: 8px 12px;
-            width: 300px;
+            padding: 8px 16px;
+            width: 100%;
+            max-width: 500px;
         }
 
         .search-box input {
@@ -417,7 +426,9 @@
         .top-bar-right {
             display: flex;
             align-items: center;
+            justify-content: flex-end;
             gap: 16px;
+            flex: 1;
         }
 
         .token-display {
@@ -2742,7 +2753,7 @@
 
         /* Responsive */
         @media (max-width: 768px) {
-            .search-box {
+            .top-bar-center {
                 display: none;
             }
 
@@ -3820,6 +3831,8 @@
             <a href="/beatpax" class="logo">
                 <img src="{{ url_for('static', filename='images/beatpax-logo.png') }}" alt="Beatpax">
             </a>
+        </div>
+        <div class="top-bar-center">
             <div class="search-box">
                 <i data-lucide="search" class="lucide-icon"></i>
                 <input type="text" placeholder="Search beats, creators..." id="searchInput">
