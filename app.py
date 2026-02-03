@@ -1621,16 +1621,28 @@ def beatpax_beats():
 @login_required
 def beatpax_upload_config():
     """Get upload configuration for client-side uploads"""
-    is_vercel = os.environ.get('VERCEL') == 'true'
+    is_vercel = os.environ.get('VERCEL') == 'true' or os.environ.get('VERCEL') == '1'
     blob_configured = blob_storage.is_blob_configured()
     blob_token = os.environ.get('BLOB_READ_WRITE_TOKEN', '') if blob_configured else ''
+
+    # Log for debugging
+    print(f"Upload config: is_vercel={is_vercel}, blob_configured={blob_configured}, token_present={bool(blob_token)}")
+
+    # Determine max file size
+    if is_vercel and blob_configured:
+        max_size = 50 * 1024 * 1024  # 50MB with client upload
+    elif is_vercel:
+        max_size = 4 * 1024 * 1024   # 4MB without blob (server limit)
+    else:
+        max_size = 50 * 1024 * 1024  # 50MB local
 
     return jsonify({
         'is_production': is_vercel,
         'blob_configured': blob_configured,
-        'blob_token': blob_token if is_vercel else '',  # Only expose token in production for client uploads
-        'max_file_size': 4 * 1024 * 1024 if is_vercel else 50 * 1024 * 1024,  # 4MB on Vercel, 50MB local
-        'server_upload_available': not is_vercel or not blob_configured  # Use server upload if local or no blob
+        'blob_token': blob_token if is_vercel else '',
+        'max_file_size': max_size,
+        'server_upload_available': not is_vercel or not blob_configured,
+        'message': 'Blob storage not configured. Large file uploads disabled.' if (is_vercel and not blob_configured) else None
     })
 
 

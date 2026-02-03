@@ -1647,7 +1647,19 @@
                 const response = await fetch('/api/beatpax/upload-config');
                 if (response.ok) {
                     uploadConfig = await response.json();
-                    console.log('Upload config:', uploadConfig.is_production ? 'Production mode' : 'Local mode');
+                    console.log('Upload config:', uploadConfig);
+
+                    // Update file size hint based on config
+                    const maxSizeMB = Math.round(uploadConfig.max_file_size / (1024 * 1024));
+                    const fileHint = document.querySelector('.file-upload .file-hint');
+                    if (fileHint) {
+                        fileHint.textContent = `Max ${maxSizeMB}MB per file. You can select multiple files.`;
+                    }
+
+                    // Show warning if in production without blob
+                    if (uploadConfig.is_production && !uploadConfig.blob_configured) {
+                        console.warn('Blob storage not configured. Large uploads will fail.');
+                    }
                 }
             } catch (e) {
                 console.log('Using default upload config');
@@ -2195,7 +2207,11 @@
             const maxSizeMB = Math.round(maxSize / (1024 * 1024));
             for (const file of selectedAudioFiles) {
                 if (file.size > maxSize) {
-                    showToast(`File "${file.name}" is too large. Maximum ${maxSizeMB}MB`, 'error');
+                    if (uploadConfig.is_production && !uploadConfig.blob_configured) {
+                        showToast(`File "${file.name}" is too large. Server limit is ${maxSizeMB}MB. Contact admin to enable large uploads.`, 'error');
+                    } else {
+                        showToast(`File "${file.name}" is too large. Maximum ${maxSizeMB}MB`, 'error');
+                    }
                     return;
                 }
             }
