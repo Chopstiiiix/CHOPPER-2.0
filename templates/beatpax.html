@@ -2889,7 +2889,7 @@
                             <i data-lucide="skip-back" class="lucide-icon"></i>
                         </button>
                         <button class="player-control-btn main" id="playerPlayPauseBtn" title="Play/Pause">
-                            <i data-lucide="play" class="lucide-icon" id="playPauseIcon"></i>
+                            <i data-lucide="play" class="lucide-icon" id="packPlayPauseIcon"></i>
                         </button>
                         <button class="player-control-btn" id="playerNextBtn" title="Next">
                             <i data-lucide="skip-forward" class="lucide-icon"></i>
@@ -3819,11 +3819,13 @@
             fetch(`/api/beatpax/beats/${track.id}/play`, { method: 'POST' });
         }
 
-        // Update play/pause button icon
+        // Update play/pause button icon in pack player bar
         function updatePlayPauseButton() {
-            const icon = document.getElementById('playPauseIcon');
-            icon.setAttribute('data-lucide', isPlaying ? 'pause' : 'play');
-            lucide.createIcons();
+            const icon = document.getElementById('packPlayPauseIcon');
+            if (icon) {
+                icon.setAttribute('data-lucide', isPlaying ? 'pause' : 'play');
+                lucide.createIcons();
+            }
         }
 
         // Stop playback
