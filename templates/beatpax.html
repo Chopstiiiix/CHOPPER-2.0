@@ -3834,10 +3834,6 @@
                 <i data-lucide="plus" class="lucide-icon"></i>
                 Buy Tokens
             </button>
-            <button class="btn btn-secondary" id="myUploadsBtn">
-                <i data-lucide="folder" class="lucide-icon"></i>
-                My Uploads
-            </button>
             <button class="btn btn-primary" id="uploadBtn">
                 <i data-lucide="upload" class="lucide-icon"></i>
                 Upload
@@ -3857,6 +3853,10 @@
                 <i data-lucide="heart" class="lucide-icon"></i>
                 <span class="nav-label">Liked Tracks</span>
                 <span class="nav-count" id="likedCount">0</span>
+            </div>
+            <div class="sidebar-nav-item" onclick="openMyUploadsPanel()">
+                <i data-lucide="folder" class="lucide-icon"></i>
+                <span class="nav-label">My Uploads</span>
             </div>
             <div class="sidebar-nav-item" data-view="downloaded" onclick="switchSidebarView('downloaded')">
                 <i data-lucide="download" class="lucide-icon"></i>
@@ -4579,10 +4579,11 @@
         const myUploadsPanel = document.getElementById('myUploadsPanel');
         const editPackPanel = document.getElementById('editPackPanel');
 
-        document.getElementById('myUploadsBtn').addEventListener('click', () => {
+        // Function to open My Uploads panel (called from sidebar)
+        function openMyUploadsPanel() {
             myUploadsPanel.classList.add('active');
             loadMyUploads();
-        });
+        }
 
         document.getElementById('closeMyUploads').addEventListener('click', () => {
             myUploadsPanel.classList.remove('active');
