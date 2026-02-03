@@ -2224,6 +2224,188 @@ def get_my_beats():
         return jsonify({'error': 'Failed to fetch beats'}), 500
 
 
+@app.route('/api/beatpax/my-uploads')
+@login_required
+def get_my_uploads():
+    """Get all sound packs uploaded by the current user"""
+    user_id = session.get('user_id')
+
+    try:
+        # Get sound packs
+        packs = SoundPack.query.filter_by(creator_id=user_id, is_active=True).order_by(
+            SoundPack.created_at.desc()
+        ).all()
+
+        # Get standalone beats (not part of a pack)
+        standalone_beats = Beat.query.filter_by(
+            creator_id=user_id,
+            sound_pack_id=None,
+            is_active=True
+        ).order_by(Beat.created_at.desc()).all()
+
+        return jsonify({
+            'sound_packs': [pack.to_dict(include_tracks=True) for pack in packs],
+            'standalone_beats': [b.to_dict() for b in standalone_beats],
+            'total_packs': len(packs),
+            'total_standalone': len(standalone_beats)
+        })
+    except Exception as e:
+        print(f"Error fetching my uploads: {e}")
+        return jsonify({'error': 'Failed to fetch uploads'}), 500
+
+
+@app.route('/api/beatpax/soundpacks/<int:pack_id>', methods=['PUT'])
+@login_required
+def update_soundpack(pack_id):
+    """Update a sound pack"""
+    user_id = session.get('user_id')
+
+    try:
+        pack = SoundPack.query.get(pack_id)
+        if not pack:
+            return jsonify({'error': 'Sound pack not found'}), 404
+
+        if pack.creator_id != user_id:
+            return jsonify({'error': 'You can only edit your own uploads'}), 403
+
+        data = request.get_json()
+
+        # Update fields
+        if 'name' in data:
+            pack.name = data['name'].strip()
+        if 'genre' in data:
+            pack.genre = data['genre'].strip()
+        if 'description' in data:
+            pack.description = data['description'].strip()
+        if 'tags' in data:
+            pack.tags = data['tags'].strip()
+        if 'token_cost' in data:
+            pack.token_cost = max(5, min(100, int(data['token_cost'])))
+        if 'cover_url' in data:
+            pack.cover_url = data['cover_url']
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'sound_pack': pack.to_dict(include_tracks=True),
+            'message': 'Sound pack updated successfully!'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating sound pack: {e}")
+        return jsonify({'error': 'Failed to update sound pack'}), 500
+
+
+@app.route('/api/beatpax/soundpacks/<int:pack_id>', methods=['DELETE'])
+@login_required
+def delete_soundpack(pack_id):
+    """Delete a sound pack and all its tracks"""
+    user_id = session.get('user_id')
+
+    try:
+        pack = SoundPack.query.get(pack_id)
+        if not pack:
+            return jsonify({'error': 'Sound pack not found'}), 404
+
+        if pack.creator_id != user_id:
+            return jsonify({'error': 'You can only delete your own uploads'}), 403
+
+        # Soft delete - mark as inactive
+        pack.is_active = False
+        for track in pack.tracks:
+            track.is_active = False
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Sound pack deleted successfully!'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting sound pack: {e}")
+        return jsonify({'error': 'Failed to delete sound pack'}), 500
+
+
+@app.route('/api/beatpax/tracks/<int:track_id>', methods=['PUT'])
+@login_required
+def update_track(track_id):
+    """Update an individual track"""
+    user_id = session.get('user_id')
+
+    try:
+        track = Beat.query.get(track_id)
+        if not track:
+            return jsonify({'error': 'Track not found'}), 404
+
+        if track.creator_id != user_id:
+            return jsonify({'error': 'You can only edit your own uploads'}), 403
+
+        data = request.get_json()
+
+        # Update fields
+        if 'title' in data:
+            track.title = data['title'].strip()
+        if 'bpm' in data:
+            track.bpm = int(data['bpm']) if data['bpm'] else None
+        if 'key' in data:
+            track.key = data['key'].strip()
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'track': track.to_dict(),
+            'message': 'Track updated successfully!'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating track: {e}")
+        return jsonify({'error': 'Failed to update track'}), 500
+
+
+@app.route('/api/beatpax/tracks/<int:track_id>', methods=['DELETE'])
+@login_required
+def delete_track(track_id):
+    """Delete an individual track"""
+    user_id = session.get('user_id')
+
+    try:
+        track = Beat.query.get(track_id)
+        if not track:
+            return jsonify({'error': 'Track not found'}), 404
+
+        if track.creator_id != user_id:
+            return jsonify({'error': 'You can only delete your own uploads'}), 403
+
+        # Soft delete
+        track.is_active = False
+
+        # Update pack track count if part of a pack
+        if track.sound_pack_id:
+            pack = SoundPack.query.get(track.sound_pack_id)
+            if pack:
+                pack.track_count = Beat.query.filter_by(
+                    sound_pack_id=pack.id, is_active=True
+                ).count()
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Track deleted successfully!'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting track: {e}")
+        return jsonify({'error': 'Failed to delete track'}), 500
+
+
 # Create database tables on app startup (only in development)
 # On Vercel, use Vercel Postgres and run migrations separately
 if not os.environ.get('VERCEL'):

@@ -929,6 +929,269 @@
             letter-spacing: 0.5px;
         }
 
+        /* My Uploads styles */
+        .my-uploads-modal {
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .my-uploads-content {
+            padding: 0;
+        }
+
+        .my-uploads-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .my-uploads-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .my-uploads-empty .lucide-icon {
+            width: 48px;
+            height: 48px;
+            color: #444;
+            margin-bottom: 16px;
+        }
+
+        .my-uploads-empty h3 {
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .my-uploads-empty p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .my-uploads-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 16px;
+        }
+
+        .upload-card {
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .upload-card-header {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+        }
+
+        .upload-card-cover {
+            width: 80px;
+            height: 80px;
+            background: #2d2d2d;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .upload-card-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .upload-card-cover .placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+        }
+
+        .upload-card-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .upload-card-title {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .upload-card-meta {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .upload-card-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .upload-card-actions {
+            display: flex;
+            gap: 8px;
+            padding: 0 12px 12px;
+        }
+
+        .upload-card-actions button {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .upload-card-actions .edit-btn {
+            background: #2d2d2d;
+            color: #fff;
+        }
+
+        .upload-card-actions .edit-btn:hover {
+            background: #3d3d3d;
+        }
+
+        .upload-card-actions .delete-btn {
+            background: rgba(255, 68, 68, 0.1);
+            color: #ff4444;
+        }
+
+        .upload-card-actions .delete-btn:hover {
+            background: rgba(255, 68, 68, 0.2);
+        }
+
+        .upload-card-tracks {
+            border-top: 1px solid #2d2d2d;
+            padding: 12px;
+        }
+
+        .upload-card-tracks-header {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .upload-track-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .upload-track-item .track-num {
+            width: 20px;
+            text-align: center;
+            color: #555;
+        }
+
+        .upload-track-item .track-name {
+            flex: 1;
+            color: #ccc;
+        }
+
+        .upload-track-item .track-meta {
+            font-size: 11px;
+            color: #555;
+        }
+
+        /* Edit modal */
+        .edit-modal {
+            max-width: 500px;
+        }
+
+        .edit-tracks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .edit-track-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #1a1a1a;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .edit-track-item .track-num {
+            width: 24px;
+            height: 24px;
+            background: #2d2d2d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .edit-track-item input {
+            flex: 1;
+            background: #0d0d0d;
+            border: 1px solid #2d2d2d;
+            border-radius: 4px;
+            padding: 6px 8px;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .edit-track-item input:focus {
+            border-color: #fff;
+            outline: none;
+        }
+
+        .edit-track-item .delete-track-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .edit-track-item .delete-track-btn:hover {
+            color: #ff4444;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .form-actions button {
+            flex: 1;
+        }
+
         .token-slider {
             display: flex;
             align-items: center;
@@ -1462,6 +1725,10 @@
                 <i data-lucide="plus" class="lucide-icon"></i>
                 Buy Tokens
             </button>
+            <button class="btn btn-secondary" id="myUploadsBtn">
+                <i data-lucide="folder" class="lucide-icon"></i>
+                My Uploads
+            </button>
             <button class="btn btn-primary" id="uploadBtn">
                 <i data-lucide="upload" class="lucide-icon"></i>
                 Upload
@@ -1729,6 +1996,82 @@
         </div>
     </div>
 
+    <!-- My Uploads Modal -->
+    <div class="upload-panel" id="myUploadsPanel">
+        <div class="upload-modal my-uploads-modal">
+            <div class="upload-header">
+                <h2>My Uploads</h2>
+                <button class="close-btn" id="closeMyUploads">
+                    <i data-lucide="x" class="lucide-icon"></i>
+                </button>
+            </div>
+            <div class="my-uploads-content">
+                <div class="my-uploads-loading" id="myUploadsLoading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading your uploads...</p>
+                </div>
+                <div class="my-uploads-empty" id="myUploadsEmpty" style="display: none;">
+                    <i data-lucide="music" class="lucide-icon"></i>
+                    <h3>No uploads yet</h3>
+                    <p>Upload your first sound pack to see it here!</p>
+                    <button class="btn btn-primary" onclick="document.getElementById('myUploadsPanel').classList.remove('active'); document.getElementById('uploadPanel').classList.add('active');">
+                        Upload Now
+                    </button>
+                </div>
+                <div class="my-uploads-list" id="myUploadsList" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Pack Modal -->
+    <div class="upload-panel" id="editPackPanel">
+        <div class="upload-modal edit-modal">
+            <div class="upload-header">
+                <h2>Edit Sound Pack</h2>
+                <button class="close-btn" id="closeEditPack">
+                    <i data-lucide="x" class="lucide-icon"></i>
+                </button>
+            </div>
+            <form class="upload-form" id="editPackForm">
+                <input type="hidden" id="editPackId">
+                <div class="form-group">
+                    <label class="form-label">Pack Name</label>
+                    <input type="text" class="form-input" id="editPackName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Genre</label>
+                    <select class="form-select" id="editPackGenre">
+                        <option value="Hip-Hop">Hip-Hop</option>
+                        <option value="R&B">R&B</option>
+                        <option value="Pop">Pop</option>
+                        <option value="Trap">Trap</option>
+                        <option value="Afrobeats">Afrobeats</option>
+                        <option value="Soul">Soul</option>
+                        <option value="Lo-Fi">Lo-Fi</option>
+                        <option value="Drill">Drill</option>
+                        <option value="Experimental">Experimental</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tags</label>
+                    <input type="text" class="form-input" id="editPackTags" placeholder="dark, melodic, 808s">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Token Price (5-50)</label>
+                    <input type="number" class="form-input" id="editPackPrice" min="5" max="50">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tracks</label>
+                    <div class="edit-tracks-list" id="editTracksList"></div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelEditPack">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast" id="toast">
         <i data-lucide="check-circle" class="lucide-icon"></i>
@@ -1827,6 +2170,343 @@
         document.getElementById('closeWallet').addEventListener('click', () => {
             walletPanel.classList.remove('active');
         });
+
+        // My Uploads Panel
+        const myUploadsPanel = document.getElementById('myUploadsPanel');
+        const editPackPanel = document.getElementById('editPackPanel');
+
+        document.getElementById('myUploadsBtn').addEventListener('click', () => {
+            myUploadsPanel.classList.add('active');
+            loadMyUploads();
+        });
+
+        document.getElementById('closeMyUploads').addEventListener('click', () => {
+            myUploadsPanel.classList.remove('active');
+        });
+
+        document.getElementById('closeEditPack').addEventListener('click', () => {
+            editPackPanel.classList.remove('active');
+        });
+
+        document.getElementById('cancelEditPack').addEventListener('click', () => {
+            editPackPanel.classList.remove('active');
+        });
+
+        myUploadsPanel.addEventListener('click', (e) => {
+            if (e.target === myUploadsPanel) {
+                myUploadsPanel.classList.remove('active');
+            }
+        });
+
+        editPackPanel.addEventListener('click', (e) => {
+            if (e.target === editPackPanel) {
+                editPackPanel.classList.remove('active');
+            }
+        });
+
+        // Load user's uploads
+        async function loadMyUploads() {
+            const loading = document.getElementById('myUploadsLoading');
+            const empty = document.getElementById('myUploadsEmpty');
+            const list = document.getElementById('myUploadsList');
+
+            loading.style.display = 'flex';
+            empty.style.display = 'none';
+            list.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/beatpax/my-uploads');
+                const data = await response.json();
+
+                loading.style.display = 'none';
+
+                const packs = data.sound_packs || [];
+                const standalone = data.standalone_beats || [];
+
+                if (packs.length === 0 && standalone.length === 0) {
+                    empty.style.display = 'flex';
+                    lucide.createIcons();
+                    return;
+                }
+
+                list.style.display = 'flex';
+                list.innerHTML = '';
+
+                // Render sound packs
+                packs.forEach(pack => {
+                    list.innerHTML += createUploadCard(pack);
+                });
+
+                // Render standalone beats
+                standalone.forEach(beat => {
+                    list.innerHTML += createStandaloneCard(beat);
+                });
+
+                lucide.createIcons();
+                attachUploadCardHandlers();
+
+            } catch (error) {
+                console.error('Error loading uploads:', error);
+                loading.style.display = 'none';
+                empty.style.display = 'flex';
+            }
+        }
+
+        function createUploadCard(pack) {
+            const tracks = pack.tracks || [];
+            const trackList = tracks.slice(0, 5).map((t, i) => `
+                <div class="upload-track-item">
+                    <span class="track-num">${i + 1}</span>
+                    <span class="track-name">${t.title}</span>
+                    <span class="track-meta">${t.bpm ? t.bpm + ' BPM' : ''} ${t.key || ''}</span>
+                </div>
+            `).join('');
+
+            return `
+                <div class="upload-card" data-pack-id="${pack.id}">
+                    <div class="upload-card-header">
+                        <div class="upload-card-cover">
+                            ${pack.cover_url
+                                ? `<img src="${pack.cover_url}" alt="${pack.name}">`
+                                : `<div class="placeholder"><i data-lucide="music" class="lucide-icon"></i></div>`
+                            }
+                        </div>
+                        <div class="upload-card-info">
+                            <div class="upload-card-title">${pack.name}</div>
+                            <div class="upload-card-meta">${pack.genre} • ${pack.track_count} tracks • ${pack.token_cost} tokens</div>
+                            <div class="upload-card-stats">
+                                <span><i data-lucide="play" class="lucide-icon" style="width:12px;height:12px;"></i> ${pack.play_count || 0}</span>
+                                <span><i data-lucide="download" class="lucide-icon" style="width:12px;height:12px;"></i> ${pack.download_count || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${tracks.length > 0 ? `
+                        <div class="upload-card-tracks">
+                            <div class="upload-card-tracks-header">Tracks</div>
+                            ${trackList}
+                            ${tracks.length > 5 ? `<div class="upload-track-item"><span class="track-meta">+${tracks.length - 5} more</span></div>` : ''}
+                        </div>
+                    ` : ''}
+                    <div class="upload-card-actions">
+                        <button class="edit-btn" onclick="openEditPack(${pack.id})">
+                            <i data-lucide="edit-2" class="lucide-icon"></i> Edit
+                        </button>
+                        <button class="delete-btn" onclick="deletePack(${pack.id}, '${pack.name.replace(/'/g, "\\'")}')">
+                            <i data-lucide="trash-2" class="lucide-icon"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createStandaloneCard(beat) {
+            return `
+                <div class="upload-card" data-beat-id="${beat.id}">
+                    <div class="upload-card-header">
+                        <div class="upload-card-cover">
+                            ${beat.cover_url
+                                ? `<img src="${beat.cover_url}" alt="${beat.title}">`
+                                : `<div class="placeholder"><i data-lucide="music" class="lucide-icon"></i></div>`
+                            }
+                        </div>
+                        <div class="upload-card-info">
+                            <div class="upload-card-title">${beat.title}</div>
+                            <div class="upload-card-meta">${beat.genre} • ${beat.bpm ? beat.bpm + ' BPM' : ''} ${beat.key || ''}</div>
+                            <div class="upload-card-stats">
+                                <span><i data-lucide="play" class="lucide-icon" style="width:12px;height:12px;"></i> ${beat.play_count || 0}</span>
+                                <span><i data-lucide="download" class="lucide-icon" style="width:12px;height:12px;"></i> ${beat.download_count || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="upload-card-actions">
+                        <button class="delete-btn" onclick="deleteTrack(${beat.id}, '${beat.title.replace(/'/g, "\\'")}')">
+                            <i data-lucide="trash-2" class="lucide-icon"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function attachUploadCardHandlers() {
+            // Handlers are attached via onclick in the HTML
+        }
+
+        let currentEditPack = null;
+
+        async function openEditPack(packId) {
+            try {
+                const response = await fetch('/api/beatpax/my-uploads');
+                const data = await response.json();
+                const pack = data.sound_packs.find(p => p.id === packId);
+
+                if (!pack) {
+                    showToast('Pack not found', 'error');
+                    return;
+                }
+
+                currentEditPack = pack;
+
+                document.getElementById('editPackId').value = pack.id;
+                document.getElementById('editPackName').value = pack.name;
+                document.getElementById('editPackGenre').value = pack.genre;
+                document.getElementById('editPackTags').value = pack.tags ? pack.tags.join(', ') : '';
+                document.getElementById('editPackPrice').value = pack.token_cost;
+
+                // Render tracks
+                const tracksList = document.getElementById('editTracksList');
+                tracksList.innerHTML = (pack.tracks || []).map((track, i) => `
+                    <div class="edit-track-item" data-track-id="${track.id}">
+                        <span class="track-num">${i + 1}</span>
+                        <input type="text" value="${track.title}" data-field="title" placeholder="Track name">
+                        <input type="number" value="${track.bpm || ''}" data-field="bpm" placeholder="BPM" style="width:60px;">
+                        <input type="text" value="${track.key || ''}" data-field="key" placeholder="Key" style="width:70px;">
+                        <button type="button" class="delete-track-btn" onclick="deleteTrackFromPack(${track.id}, '${track.title.replace(/'/g, "\\'")}')">
+                            <i data-lucide="x" class="lucide-icon"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                lucide.createIcons();
+                myUploadsPanel.classList.remove('active');
+                editPackPanel.classList.add('active');
+
+            } catch (error) {
+                console.error('Error loading pack:', error);
+                showToast('Failed to load pack', 'error');
+            }
+        }
+
+        document.getElementById('editPackForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const packId = document.getElementById('editPackId').value;
+            const name = document.getElementById('editPackName').value.trim();
+            const genre = document.getElementById('editPackGenre').value;
+            const tags = document.getElementById('editPackTags').value.trim();
+            const tokenCost = document.getElementById('editPackPrice').value;
+
+            try {
+                // Update pack info
+                const response = await fetch(`/api/beatpax/soundpacks/${packId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, genre, tags, token_cost: tokenCost })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to update', 'error');
+                    return;
+                }
+
+                // Update individual tracks
+                const trackItems = document.querySelectorAll('.edit-track-item');
+                for (const item of trackItems) {
+                    const trackId = item.dataset.trackId;
+                    const title = item.querySelector('[data-field="title"]').value.trim();
+                    const bpm = item.querySelector('[data-field="bpm"]').value;
+                    const key = item.querySelector('[data-field="key"]').value.trim();
+
+                    await fetch(`/api/beatpax/tracks/${trackId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, bpm: bpm || null, key })
+                    });
+                }
+
+                showToast('Pack updated successfully!', 'success');
+                editPackPanel.classList.remove('active');
+                myUploadsPanel.classList.add('active');
+                loadMyUploads();
+                loadCatalog();
+
+            } catch (error) {
+                console.error('Error updating pack:', error);
+                showToast('Failed to update pack', 'error');
+            }
+        });
+
+        async function deletePack(packId, packName) {
+            if (!confirm(`Delete "${packName}" and all its tracks? This cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/beatpax/soundpacks/${packId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('Pack deleted successfully!', 'success');
+                    loadMyUploads();
+                    loadCatalog();
+                } else {
+                    showToast(data.error || 'Failed to delete', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting pack:', error);
+                showToast('Failed to delete pack', 'error');
+            }
+        }
+
+        async function deleteTrack(trackId, trackTitle) {
+            if (!confirm(`Delete "${trackTitle}"? This cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/beatpax/tracks/${trackId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('Track deleted successfully!', 'success');
+                    loadMyUploads();
+                    loadCatalog();
+                } else {
+                    showToast(data.error || 'Failed to delete', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting track:', error);
+                showToast('Failed to delete track', 'error');
+            }
+        }
+
+        async function deleteTrackFromPack(trackId, trackTitle) {
+            if (!confirm(`Delete "${trackTitle}" from this pack?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/beatpax/tracks/${trackId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    // Remove from UI
+                    const item = document.querySelector(`.edit-track-item[data-track-id="${trackId}"]`);
+                    if (item) item.remove();
+
+                    // Re-number remaining tracks
+                    document.querySelectorAll('.edit-track-item').forEach((item, i) => {
+                        item.querySelector('.track-num').textContent = i + 1;
+                    });
+
+                    showToast('Track deleted!', 'success');
+                } else {
+                    const data = await response.json();
+                    showToast(data.error || 'Failed to delete', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting track:', error);
+                showToast('Failed to delete track', 'error');
+            }
+        }
 
         // Close modals on overlay click
         uploadPanel.addEventListener('click', (e) => {
