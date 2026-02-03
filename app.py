@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from functools import wraps
 from werkzeug.utils import secure_filename
 from PIL import Image
-from models import db, ChatMessage, MessageAttachment, User, Feedback, UserProfile, DocumentUpload, AdminMessage, SupportChat, Beat, Wallet, Transaction, UserBeatLibrary
+from models import db, ChatMessage, MessageAttachment, User, Feedback, UserProfile, DocumentUpload, AdminMessage, SupportChat, SoundPack, Beat, Wallet, Transaction, UserBeatLibrary
 import blob_storage
 from chroma_client import (
     get_collection, add_document_chunks, query_documents,
@@ -1709,6 +1709,148 @@ def beatpax_create_beat():
         db.session.rollback()
         print(f"Error creating beat: {e}")
         return jsonify({'error': 'Failed to create beat'}), 500
+
+
+@app.route('/api/beatpax/create-soundpack', methods=['POST'])
+@login_required
+def beatpax_create_soundpack():
+    """Create a sound pack with multiple tracks (for client-side uploads)"""
+    user_id = session.get('user_id')
+
+    try:
+        data = request.get_json()
+
+        # Sound pack info (shared)
+        pack_name = (data.get('pack_name') or '').strip()
+        genre = (data.get('genre') or '').strip()
+        cover_url = (data.get('cover_url') or '').strip() or None
+        description = (data.get('description') or '').strip()
+        tags = (data.get('tags') or '').strip()
+        token_cost = data.get('token_cost', 10)
+        tracks_data = data.get('tracks', [])
+
+        # Validate required fields
+        if not pack_name:
+            return jsonify({'error': 'Pack name is required'}), 400
+        if not genre:
+            return jsonify({'error': 'Genre is required'}), 400
+        if not tracks_data or len(tracks_data) == 0:
+            return jsonify({'error': 'At least one track is required'}), 400
+
+        # Validate all tracks have audio URLs
+        for i, track in enumerate(tracks_data):
+            if not track.get('audio_url'):
+                return jsonify({'error': f'Track {i+1} is missing audio URL'}), 400
+            if not track.get('title'):
+                return jsonify({'error': f'Track {i+1} is missing title'}), 400
+
+        # Validate token cost
+        token_cost = max(5, min(100, int(token_cost)))
+
+        # Create sound pack
+        sound_pack = SoundPack(
+            name=pack_name,
+            creator_id=user_id,
+            cover_url=cover_url,
+            genre=genre,
+            description=description,
+            tags=tags,
+            token_cost=token_cost,
+            track_count=len(tracks_data)
+        )
+        db.session.add(sound_pack)
+        db.session.flush()  # Get the pack ID
+
+        # Create tracks
+        created_tracks = []
+        for i, track_data in enumerate(tracks_data):
+            track = Beat(
+                title=track_data.get('title', f'Track {i+1}'),
+                creator_id=user_id,
+                sound_pack_id=sound_pack.id,
+                audio_url=track_data.get('audio_url'),
+                cover_url=cover_url,  # Use pack cover
+                genre=genre,
+                bpm=track_data.get('bpm'),
+                key=track_data.get('key', ''),
+                tags=tags,
+                token_cost=0,  # Individual tracks in pack are free (pack has cost)
+                track_number=i + 1
+            )
+            db.session.add(track)
+            created_tracks.append(track)
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'sound_pack': sound_pack.to_dict(include_tracks=True),
+            'message': f'Sound pack "{pack_name}" created with {len(created_tracks)} tracks!'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        traceback.print_exc()
+        print(f"Error creating sound pack: {e}")
+        return jsonify({'error': f'Failed to create sound pack: {str(e)}'}), 500
+
+
+@app.route('/api/beatpax/soundpacks', methods=['GET'])
+@login_required
+def get_soundpacks():
+    """Get all sound packs"""
+    try:
+        genre = request.args.get('genre')
+        query = SoundPack.query.filter_by(is_active=True)
+
+        if genre and genre != 'all':
+            query = query.filter_by(genre=genre)
+
+        packs = query.order_by(SoundPack.created_at.desc()).limit(20).all()
+        return jsonify({
+            'sound_packs': [pack.to_dict(include_tracks=True) for pack in packs]
+        })
+    except Exception as e:
+        print(f"Error fetching sound packs: {e}")
+        return jsonify({'error': 'Failed to fetch sound packs'}), 500
+
+
+@app.route('/api/beatpax/upload-audio', methods=['POST'])
+@login_required
+def beatpax_upload_audio():
+    """Upload just an audio file and return the URL (for local development)"""
+    try:
+        audio_file = request.files.get('audio')
+        if not audio_file or not audio_file.filename:
+            return jsonify({'error': 'Audio file is required'}), 400
+
+        if not allowed_audio_file(audio_file.filename):
+            return jsonify({'error': 'Invalid audio format'}), 400
+
+        # Generate unique filename
+        audio_filename = generate_unique_filename(audio_file.filename)
+        audio_mime = audio_file.content_type or mimetypes.guess_type(audio_file.filename)[0] or 'audio/mpeg'
+
+        # Upload to Blob storage or local
+        if blob_storage.is_blob_configured():
+            audio_path = blob_storage.generate_blob_path('packs/audio', audio_filename)
+            audio_url, _ = blob_storage.upload_file(audio_file, audio_path, audio_mime)
+        else:
+            audio_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'packs', 'audio')
+            os.makedirs(audio_dir, exist_ok=True)
+            audio_local_path = os.path.join(audio_dir, audio_filename)
+            audio_file.save(audio_local_path)
+            audio_url = f'/uploads/packs/audio/{audio_filename}'
+
+        return jsonify({
+            'success': True,
+            'audio_url': audio_url
+        })
+
+    except Exception as e:
+        print(f"Error uploading audio: {e}")
+        return jsonify({'error': 'Failed to upload audio'}), 500
 
 
 @app.route('/api/beatpax/upload', methods=['POST'])

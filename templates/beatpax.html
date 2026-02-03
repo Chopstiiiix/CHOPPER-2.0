@@ -821,6 +821,114 @@
             transition: width 0.3s ease;
         }
 
+        /* Form sections */
+        .form-section {
+            background: #0d0d0d;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .section-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #2d2d2d;
+        }
+
+        /* Track list */
+        .track-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .track-item {
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .track-item-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .track-number {
+            width: 24px;
+            height: 24px;
+            background: #2d2d2d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #999;
+            flex-shrink: 0;
+        }
+
+        .track-filename {
+            flex: 1;
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-remove {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .track-remove:hover {
+            color: #ff4444;
+        }
+
+        .track-fields {
+            display: grid;
+            grid-template-columns: 1fr 80px 100px;
+            gap: 8px;
+        }
+
+        .track-field input {
+            width: 100%;
+            background: #0d0d0d;
+            border: 1px solid #2d2d2d;
+            border-radius: 6px;
+            padding: 8px 10px;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .track-field input:focus {
+            border-color: #fff;
+            outline: none;
+        }
+
+        .track-field input::placeholder {
+            color: #555;
+        }
+
+        .track-field-label {
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .token-slider {
             display: flex;
             align-items: center;
@@ -1487,73 +1595,79 @@
     <div class="upload-panel" id="uploadPanel">
         <div class="upload-modal">
             <div class="upload-header">
-                <h2>Upload Beats</h2>
+                <h2>Upload Sound Pack</h2>
                 <button class="close-btn" id="closeUpload">
                     <i data-lucide="x" class="lucide-icon"></i>
                 </button>
             </div>
             <form class="upload-form" id="uploadForm" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label class="form-label">Audio Files * (MP3, WAV, FLAC - max 50MB each)</label>
-                    <div class="file-upload" id="audioUpload">
-                        <i data-lucide="music" class="lucide-icon"></i>
-                        <p>Click to select audio files</p>
-                        <p class="file-hint">You can select multiple files</p>
-                        <input type="file" name="audio" accept=".mp3,.wav,.flac,.m4a" multiple required>
-                    </div>
-                </div>
+                <!-- Pack Info Section -->
+                <div class="form-section">
+                    <div class="section-header">Pack Info</div>
 
-                <!-- Dynamic file list with individual titles -->
-                <div class="form-group" id="fileListContainer" style="display: none;">
-                    <label class="form-label">Selected Files</label>
-                    <div class="file-list" id="fileList"></div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Genre * <span class="label-hint">(applies to all)</span></label>
-                    <select class="form-select" name="genre" required>
-                        <option value="">Select genre</option>
-                        <option value="Hip-Hop">Hip-Hop</option>
-                        <option value="R&B">R&B</option>
-                        <option value="Pop">Pop</option>
-                        <option value="Trap">Trap</option>
-                        <option value="Afrobeats">Afrobeats</option>
-                        <option value="Soul">Soul</option>
-                        <option value="Experimental">Experimental</option>
-                    </select>
-                </div>
-
-                <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">BPM</label>
-                        <input type="number" class="form-input" name="bpm" placeholder="120" min="60" max="200">
+                        <label class="form-label">Pack Name *</label>
+                        <input type="text" class="form-input" name="pack_name" placeholder="e.g. Summer Vibes Vol. 1" required>
                     </div>
+
                     <div class="form-group">
-                        <label class="form-label">Key</label>
-                        <input type="text" class="form-input" name="key" placeholder="C minor">
+                        <label class="form-label">Genre *</label>
+                        <select class="form-select" name="genre" required>
+                            <option value="">Select genre</option>
+                            <option value="Hip-Hop">Hip-Hop</option>
+                            <option value="R&B">R&B</option>
+                            <option value="Pop">Pop</option>
+                            <option value="Trap">Trap</option>
+                            <option value="Afrobeats">Afrobeats</option>
+                            <option value="Soul">Soul</option>
+                            <option value="Experimental">Experimental</option>
+                            <option value="Lo-Fi">Lo-Fi</option>
+                            <option value="Drill">Drill</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Cover Artwork *</label>
+                        <div class="file-upload" id="coverUpload">
+                            <i data-lucide="image" class="lucide-icon"></i>
+                            <p>Click to upload cover</p>
+                            <p class="file-name" id="coverFileName"></p>
+                            <input type="file" name="cover" accept=".jpg,.jpeg,.png,.webp" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Tags <span class="label-hint">(optional)</span></label>
+                        <input type="text" class="form-input" name="tags" placeholder="dark, melodic, 808s (comma separated)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Token Price <span class="label-hint">(5-50 tokens for entire pack)</span></label>
+                        <div class="token-slider">
+                            <input type="range" name="token_cost" min="5" max="50" value="15" id="tokenSlider">
+                            <span class="token-value" id="tokenSliderValue">15 tokens</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Tags <span class="label-hint">(applies to all)</span></label>
-                    <input type="text" class="form-input" name="tags" placeholder="dark, melodic, trap (comma separated)">
-                </div>
+                <!-- Tracks Section -->
+                <div class="form-section">
+                    <div class="section-header">Tracks</div>
 
-                <div class="form-group">
-                    <label class="form-label">Cover Image <span class="label-hint">(optional, applies to all)</span></label>
-                    <div class="file-upload" id="coverUpload">
-                        <i data-lucide="image" class="lucide-icon"></i>
-                        <p>Click to upload cover</p>
-                        <p class="file-name" id="coverFileName"></p>
-                        <input type="file" name="cover" accept=".jpg,.jpeg,.png,.webp">
+                    <div class="form-group">
+                        <label class="form-label">Audio Files * (MP3, WAV, FLAC)</label>
+                        <div class="file-upload" id="audioUpload">
+                            <i data-lucide="music" class="lucide-icon"></i>
+                            <p>Click to select audio files</p>
+                            <p class="file-hint">Select all tracks for this pack</p>
+                            <input type="file" name="audio" accept=".mp3,.wav,.flac,.m4a" multiple required>
+                        </div>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label class="form-label">Token Price <span class="label-hint">(3-20 tokens, applies to all)</span></label>
-                    <div class="token-slider">
-                        <input type="range" name="token_cost" min="3" max="20" value="5" id="tokenSlider">
-                        <span class="token-value" id="tokenSliderValue">5 tokens</span>
+                    <!-- Dynamic track list with individual metadata -->
+                    <div class="form-group" id="fileListContainer" style="display: none;">
+                        <label class="form-label">Track Details <span class="label-hint">(name, BPM, key for each)</span></label>
+                        <div class="track-list" id="fileList"></div>
                     </div>
                 </div>
 
@@ -1569,7 +1683,7 @@
                 </div>
 
                 <button type="submit" class="upload-submit" id="uploadSubmit">
-                    Upload Beats
+                    Upload Sound Pack
                 </button>
             </form>
         </div>
@@ -1748,30 +1862,48 @@
                 selectedAudioFiles = files;
                 audioUpload.classList.add('has-file');
 
-                // Show file list
+                // Show track list
                 const fileListContainer = document.getElementById('fileListContainer');
                 const fileList = document.getElementById('fileList');
                 fileListContainer.style.display = 'block';
 
-                // Generate file list with individual title inputs
+                // Generate track list with individual fields (name, BPM, key)
                 fileList.innerHTML = files.map((file, index) => {
                     // Generate default title from filename (remove extension)
                     const defaultTitle = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
                     const fileSize = (file.size / (1024 * 1024)).toFixed(1);
 
                     return `
-                        <div class="file-list-item" data-index="${index}">
-                            <i data-lucide="music" class="lucide-icon file-icon"></i>
-                            <div class="file-info">
-                                <input type="text" class="file-title-input"
-                                       data-index="${index}"
-                                       value="${defaultTitle}"
-                                       placeholder="Beat title">
-                                <div class="file-meta">${file.name} (${fileSize} MB)</div>
+                        <div class="track-item" data-index="${index}">
+                            <div class="track-item-header">
+                                <span class="track-number">${index + 1}</span>
+                                <span class="track-filename">${file.name} (${fileSize} MB)</span>
+                                <button type="button" class="track-remove" data-index="${index}">
+                                    <i data-lucide="x" class="lucide-icon"></i>
+                                </button>
                             </div>
-                            <button type="button" class="remove-file" data-index="${index}">
-                                <i data-lucide="x" class="lucide-icon"></i>
-                            </button>
+                            <div class="track-fields">
+                                <div class="track-field">
+                                    <div class="track-field-label">Track Name</div>
+                                    <input type="text" class="track-title-input"
+                                           data-index="${index}"
+                                           value="${defaultTitle}"
+                                           placeholder="Track name">
+                                </div>
+                                <div class="track-field">
+                                    <div class="track-field-label">BPM</div>
+                                    <input type="number" class="track-bpm-input"
+                                           data-index="${index}"
+                                           placeholder="140"
+                                           min="60" max="200">
+                                </div>
+                                <div class="track-field">
+                                    <div class="track-field-label">Key</div>
+                                    <input type="text" class="track-key-input"
+                                           data-index="${index}"
+                                           placeholder="C minor">
+                                </div>
+                            </div>
                         </div>
                     `;
                 }).join('');
@@ -1779,7 +1911,7 @@
                 lucide.createIcons();
 
                 // Add remove handlers
-                fileList.querySelectorAll('.remove-file').forEach(btn => {
+                fileList.querySelectorAll('.track-remove').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const index = parseInt(btn.dataset.index);
                         selectedAudioFiles = selectedAudioFiles.filter((_, i) => i !== index);
@@ -2183,6 +2315,7 @@
             e.preventDefault();
 
             const form = e.target;
+            const packNameInput = form.querySelector('input[name="pack_name"]');
             const genreInput = form.querySelector('select[name="genre"]');
             const submitBtn = document.getElementById('uploadSubmit');
             const progressContainer = document.getElementById('uploadProgress');
@@ -2190,19 +2323,33 @@
             const progressPercent = document.getElementById('uploadProgressPercent');
             const progressBar = document.getElementById('uploadProgressBar');
 
+            // Validate pack name
+            if (!packNameInput.value.trim()) {
+                showToast('Please enter a pack name', 'error');
+                return;
+            }
+
             // Validate genre
             if (!genreInput.value) {
                 showToast('Please select a genre', 'error');
                 return;
             }
 
-            // Validate files
+            // Validate cover image
+            const coverInput = form.querySelector('input[name="cover"]');
+            const coverFile = coverInput.files[0];
+            if (!coverFile) {
+                showToast('Please upload cover artwork', 'error');
+                return;
+            }
+
+            // Validate audio files
             if (!selectedAudioFiles || !selectedAudioFiles.length) {
                 showToast('Please select at least one audio file', 'error');
                 return;
             }
 
-            // Validate file sizes based on environment
+            // Validate file sizes
             const maxSize = uploadConfig.max_file_size;
             const maxSizeMB = Math.round(maxSize / (1024 * 1024));
             for (const file of selectedAudioFiles) {
@@ -2216,143 +2363,130 @@
                 }
             }
 
-            // Get titles for each file
-            const titleInputs = document.querySelectorAll('.file-title-input');
-            const titles = Array.from(titleInputs).map(input => input.value.trim());
+            // Get track data (title, BPM, key for each)
+            const trackItems = document.querySelectorAll('.track-item');
+            const tracks = [];
+            for (let i = 0; i < trackItems.length; i++) {
+                const item = trackItems[i];
+                const title = item.querySelector('.track-title-input').value.trim();
+                const bpm = item.querySelector('.track-bpm-input').value;
+                const key = item.querySelector('.track-key-input').value.trim();
 
-            // Validate all titles
-            for (let i = 0; i < titles.length; i++) {
-                if (!titles[i]) {
-                    showToast(`Please enter a title for file ${i + 1}`, 'error');
+                if (!title) {
+                    showToast(`Please enter a name for track ${i + 1}`, 'error');
                     return;
                 }
+
+                tracks.push({ title, bpm: bpm || null, key: key || '' });
             }
 
             // Get shared form values
+            const packName = packNameInput.value.trim();
             const genre = genreInput.value;
-            const bpm = form.querySelector('input[name="bpm"]').value;
-            const key = form.querySelector('input[name="key"]').value;
-            const tags = form.querySelector('input[name="tags"]').value;
+            const tags = form.querySelector('input[name="tags"]').value.trim();
             const tokenCost = form.querySelector('input[name="token_cost"]').value;
-            const coverInput = form.querySelector('input[name="cover"]');
-            const coverFile = coverInput.files[0] || null;
 
             // Show progress
             submitBtn.disabled = true;
             submitBtn.style.display = 'none';
             progressContainer.style.display = 'block';
 
-            let successCount = 0;
-            let failCount = 0;
             const totalFiles = selectedAudioFiles.length;
             const useClientUpload = uploadConfig.is_production && uploadConfig.blob_configured && uploadConfig.blob_token;
 
-            // Upload cover once if using client upload
-            let sharedCoverUrl = null;
-            if (useClientUpload && coverFile) {
-                try {
-                    progressText.textContent = 'Uploading cover image...';
-                    const coverPath = `beats/covers/${generateUniqueFilename(coverFile.name)}`;
-                    sharedCoverUrl = await uploadToBlob(coverFile, coverPath);
-                } catch (error) {
-                    console.error('Cover upload failed:', error);
+            try {
+                // Step 1: Upload cover
+                progressText.textContent = 'Uploading cover artwork...';
+                progressPercent.textContent = '0%';
+                progressBar.style.width = '5%';
+
+                let coverUrl = null;
+                if (useClientUpload) {
+                    const coverPath = `packs/covers/${generateUniqueFilename(coverFile.name)}`;
+                    coverUrl = await uploadToBlob(coverFile, coverPath);
+                } else {
+                    // Server upload for cover - we'll handle this differently
+                    const coverFormData = new FormData();
+                    coverFormData.append('cover', coverFile);
+                    // For now, we'll upload cover with the pack creation
                 }
-            }
 
-            // Upload each file
-            for (let i = 0; i < totalFiles; i++) {
-                const file = selectedAudioFiles[i];
-                const title = titles[i];
+                // Step 2: Upload audio files
+                const uploadedTracks = [];
+                for (let i = 0; i < totalFiles; i++) {
+                    const file = selectedAudioFiles[i];
+                    const track = tracks[i];
 
-                // Update progress
-                progressText.textContent = `Uploading ${i + 1} of ${totalFiles}...`;
-                progressPercent.textContent = `${Math.round((i / totalFiles) * 100)}%`;
-                progressBar.style.width = `${(i / totalFiles) * 100}%`;
+                    progressText.textContent = `Uploading track ${i + 1} of ${totalFiles}...`;
+                    const progress = 10 + ((i / totalFiles) * 80);
+                    progressPercent.textContent = `${Math.round(progress)}%`;
+                    progressBar.style.width = `${progress}%`;
 
-                try {
+                    let audioUrl;
                     if (useClientUpload) {
-                        // Client-side upload directly to Vercel Blob
-                        const audioPath = `beats/audio/${generateUniqueFilename(file.name)}`;
-                        const audioUrl = await uploadToBlob(file, audioPath);
-
-                        // Create beat record via API
-                        const response = await fetch('/api/beatpax/create-beat', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                title,
-                                genre,
-                                bpm: bpm || null,
-                                key: key || '',
-                                tags: tags || '',
-                                token_cost: tokenCost,
-                                audio_url: audioUrl,
-                                cover_url: sharedCoverUrl
-                            })
-                        });
-
-                        if (response.status === 401) {
-                            showToast('Please login to upload beats', 'error');
-                            setTimeout(() => window.location.href = '/login', 1500);
-                            return;
-                        }
-
-                        const data = await response.json();
-                        if (response.ok && !data.error) {
-                            successCount++;
-                        } else {
-                            failCount++;
-                            console.error(`Failed to create beat "${title}":`, data.error);
-                        }
+                        const audioPath = `packs/audio/${generateUniqueFilename(file.name)}`;
+                        audioUrl = await uploadToBlob(file, audioPath);
                     } else {
-                        // Server-side upload (local development)
+                        // For local, upload via server
                         const formData = new FormData();
                         formData.append('audio', file);
-                        formData.append('title', title);
-                        formData.append('genre', genre);
-                        if (bpm) formData.append('bpm', bpm);
-                        if (key) formData.append('key', key);
-                        if (tags) formData.append('tags', tags);
-                        formData.append('token_cost', tokenCost);
-                        if (coverFile) formData.append('cover', coverFile);
-
-                        const response = await fetch('/api/beatpax/upload', {
+                        const uploadRes = await fetch('/api/beatpax/upload-audio', {
                             method: 'POST',
                             body: formData
                         });
-
-                        if (response.status === 401) {
-                            showToast('Please login to upload beats', 'error');
-                            setTimeout(() => window.location.href = '/login', 1500);
-                            return;
+                        if (!uploadRes.ok) {
+                            throw new Error(`Failed to upload ${file.name}`);
                         }
-
-                        const data = await response.json();
-                        if (response.ok && !data.error) {
-                            successCount++;
-                        } else {
-                            failCount++;
-                            console.error(`Failed to upload "${title}":`, data.error);
-                            showToast(data.error || 'Upload failed', 'error');
-                        }
+                        const uploadData = await uploadRes.json();
+                        audioUrl = uploadData.audio_url;
                     }
-                } catch (error) {
-                    failCount++;
-                    console.error(`Error uploading "${title}":`, error);
+
+                    uploadedTracks.push({
+                        title: track.title,
+                        bpm: track.bpm,
+                        key: track.key,
+                        audio_url: audioUrl
+                    });
                 }
-            }
 
-            // Complete
-            progressPercent.textContent = '100%';
-            progressBar.style.width = '100%';
+                // Step 3: Create sound pack
+                progressText.textContent = 'Creating sound pack...';
+                progressPercent.textContent = '95%';
+                progressBar.style.width = '95%';
 
-            // Show result
-            if (failCount === 0) {
-                showToast(`Successfully uploaded ${successCount} beat${successCount > 1 ? 's' : ''}!`, 'success');
-            } else if (successCount > 0) {
-                showToast(`Uploaded ${successCount} of ${totalFiles} beats. ${failCount} failed.`, 'error');
-            } else {
-                showToast('All uploads failed. Please try again.', 'error');
+                const response = await fetch('/api/beatpax/create-soundpack', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pack_name: packName,
+                        genre: genre,
+                        cover_url: coverUrl,
+                        tags: tags,
+                        token_cost: tokenCost,
+                        tracks: uploadedTracks
+                    })
+                });
+
+                if (response.status === 401) {
+                    showToast('Please login to upload', 'error');
+                    setTimeout(() => window.location.href = '/login', 1500);
+                    return;
+                }
+
+                const data = await response.json();
+
+                progressPercent.textContent = '100%';
+                progressBar.style.width = '100%';
+
+                if (response.ok && data.success) {
+                    showToast(`Sound pack "${packName}" uploaded with ${totalFiles} tracks!`, 'success');
+                } else {
+                    showToast(data.error || 'Failed to create sound pack', 'error');
+                }
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                showToast(`Upload failed: ${error.message}`, 'error');
             }
 
             // Reset form
@@ -2365,7 +2499,7 @@
                 document.getElementById('coverFileName').textContent = '';
                 audioUpload.classList.remove('has-file');
                 coverUpload.classList.remove('has-file');
-                document.getElementById('tokenSliderValue').textContent = '5 tokens';
+                document.getElementById('tokenSliderValue').textContent = '15 tokens';
                 progressContainer.style.display = 'none';
                 progressBar.style.width = '0%';
                 submitBtn.style.display = 'block';
@@ -2373,7 +2507,7 @@
 
                 // Reload catalog
                 loadCatalog();
-            }, 1000);
+            }, 1500);
         });
 
         // Token packages

@@ -309,13 +309,60 @@ class SupportChat(db.Model):
 # Beatpax Models
 # =============================================================================
 
+class SoundPack(db.Model):
+    """Sound pack containing multiple tracks"""
+    __tablename__ = 'sound_packs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    cover_url = db.Column(db.String(500))
+    genre = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.Text)
+    tags = db.Column(db.String(500))  # Comma-separated tags
+    token_cost = db.Column(db.Integer, nullable=False, default=10)
+    play_count = db.Column(db.Integer, default=0)
+    download_count = db.Column(db.Integer, default=0)
+    track_count = db.Column(db.Integer, default=0)
+    is_featured = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    creator = db.relationship('User', backref='sound_packs')
+    tracks = db.relationship('Beat', backref='sound_pack', lazy=True)
+
+    def to_dict(self, include_tracks=False):
+        data = {
+            'id': self.id,
+            'name': self.name,
+            'creator_id': self.creator_id,
+            'creator_name': f"{self.creator.first_name} {self.creator.surname}" if self.creator else None,
+            'cover_url': self.cover_url,
+            'genre': self.genre,
+            'description': self.description,
+            'tags': self.tags.split(',') if self.tags else [],
+            'token_cost': self.token_cost,
+            'play_count': self.play_count,
+            'download_count': self.download_count,
+            'track_count': self.track_count,
+            'is_featured': self.is_featured,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+        if include_tracks:
+            data['tracks'] = [track.to_dict() for track in self.tracks if track.is_active]
+        return data
+
+
 class Beat(db.Model):
-    """Beat content for the Beatpax marketplace"""
+    """Individual track/beat - can be standalone or part of a sound pack"""
     __tablename__ = 'beats'
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    sound_pack_id = db.Column(db.Integer, db.ForeignKey('sound_packs.id'), nullable=True)  # Optional pack reference
     audio_url = db.Column(db.String(500), nullable=False)
     cover_url = db.Column(db.String(500))
     genre = db.Column(db.String(50), nullable=False)
@@ -325,6 +372,7 @@ class Beat(db.Model):
     token_cost = db.Column(db.Integer, nullable=False, default=5)
     play_count = db.Column(db.Integer, default=0)
     download_count = db.Column(db.Integer, default=0)
+    track_number = db.Column(db.Integer)  # Order within sound pack
     is_featured = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -339,8 +387,9 @@ class Beat(db.Model):
             'title': self.title,
             'creator_id': self.creator_id,
             'creator_name': f"{self.creator.first_name} {self.creator.surname}" if self.creator else None,
+            'sound_pack_id': self.sound_pack_id,
             'audio_url': self.audio_url,
-            'cover_url': self.cover_url,
+            'cover_url': self.cover_url or (self.sound_pack.cover_url if self.sound_pack else None),
             'genre': self.genre,
             'bpm': self.bpm,
             'key': self.key,
@@ -348,6 +397,7 @@ class Beat(db.Model):
             'token_cost': self.token_cost,
             'play_count': self.play_count,
             'download_count': self.download_count,
+            'track_number': self.track_number,
             'is_featured': self.is_featured,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
