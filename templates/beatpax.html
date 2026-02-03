@@ -738,6 +738,280 @@
             margin-top: 2px;
         }
 
+        /* Track action buttons */
+        .pack-track-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .pack-track-item:hover .pack-track-actions {
+            opacity: 1;
+        }
+
+        .track-action-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 1px solid #2d2d2d;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #888;
+        }
+
+        .track-action-btn:hover {
+            background: #2d2d2d;
+            color: #fff;
+        }
+
+        .track-action-btn.liked {
+            color: #ff4757;
+            border-color: #ff4757;
+        }
+
+        .track-action-btn.liked:hover {
+            background: rgba(255, 71, 87, 0.2);
+        }
+
+        .track-action-btn .lucide-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Pack Media Player Bar */
+        .pack-player-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+            border-top: 1px solid #2d2d2d;
+            padding: 12px 24px;
+            display: none;
+            z-index: 1001;
+        }
+
+        .pack-player-bar.active {
+            display: block;
+        }
+
+        .pack-player-content {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .pack-player-track {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 200px;
+            max-width: 280px;
+        }
+
+        .pack-player-cover {
+            width: 56px;
+            height: 56px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #2d2d2d;
+        }
+
+        .pack-player-track-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pack-player-title {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pack-player-artist {
+            font-size: 12px;
+            color: #888;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pack-player-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .pack-player-buttons {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .player-control-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 8px;
+            transition: all 0.2s;
+            border-radius: 50%;
+        }
+
+        .player-control-btn:hover {
+            color: #fff;
+        }
+
+        .player-control-btn .lucide-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .player-control-btn.main {
+            width: 48px;
+            height: 48px;
+            background: #fff;
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .player-control-btn.main:hover {
+            transform: scale(1.05);
+            background: #e0e0e0;
+        }
+
+        .player-control-btn.main .lucide-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .pack-player-progress {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .player-time {
+            font-size: 11px;
+            color: #666;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .player-progress-bar {
+            flex: 1;
+            height: 4px;
+            background: #2d2d2d;
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .player-progress-bar:hover {
+            height: 6px;
+        }
+
+        .player-progress-fill {
+            height: 100%;
+            background: #fff;
+            border-radius: 2px;
+            width: 0%;
+            position: relative;
+        }
+
+        .player-progress-fill::after {
+            content: '';
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .player-progress-bar:hover .player-progress-fill::after {
+            opacity: 1;
+        }
+
+        .pack-player-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 100px;
+            justify-content: flex-end;
+        }
+
+        .player-action-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #888;
+        }
+
+        .player-action-btn:hover {
+            color: #fff;
+            background: #2d2d2d;
+        }
+
+        .player-action-btn.liked {
+            color: #ff4757;
+        }
+
+        .player-action-btn .lucide-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .pack-player-content {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .pack-player-track {
+                width: 100%;
+                max-width: none;
+            }
+
+            .pack-player-controls {
+                width: 100%;
+                order: 3;
+            }
+
+            .pack-player-actions {
+                position: absolute;
+                right: 24px;
+                top: 20px;
+            }
+        }
+
         /* Lower Grid - Trending/Fresh/Creators */
         .lower-grid {
             display: grid;
@@ -2590,10 +2864,56 @@
                     </div>
                 </div>
             </div>
-            <div class="pack-tracks-section">
+            <div class="pack-tracks-section" style="margin-bottom: 100px;">
                 <div class="pack-tracks-header">Tracks</div>
                 <div class="pack-track-list" id="packTrackList">
                     <!-- Track items will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Pack Media Player Bar -->
+        <div class="pack-player-bar" id="packPlayerBar">
+            <div class="pack-player-content">
+                <div class="pack-player-track">
+                    <img src="" alt="" class="pack-player-cover" id="packPlayerCover">
+                    <div class="pack-player-track-info">
+                        <div class="pack-player-title" id="packPlayerTitle">Track Title</div>
+                        <div class="pack-player-artist" id="packPlayerArtist">Artist</div>
+                    </div>
+                </div>
+
+                <div class="pack-player-controls">
+                    <div class="pack-player-buttons">
+                        <button class="player-control-btn" id="playerPrevBtn" title="Previous">
+                            <i data-lucide="skip-back" class="lucide-icon"></i>
+                        </button>
+                        <button class="player-control-btn" id="playerStopBtn" title="Stop">
+                            <i data-lucide="square" class="lucide-icon"></i>
+                        </button>
+                        <button class="player-control-btn main" id="playerPlayPauseBtn" title="Play/Pause">
+                            <i data-lucide="play" class="lucide-icon" id="playPauseIcon"></i>
+                        </button>
+                        <button class="player-control-btn" id="playerNextBtn" title="Next">
+                            <i data-lucide="skip-forward" class="lucide-icon"></i>
+                        </button>
+                    </div>
+                    <div class="pack-player-progress">
+                        <span class="player-time" id="playerCurrentTime">0:00</span>
+                        <div class="player-progress-bar" id="playerProgressBar">
+                            <div class="player-progress-fill" id="playerProgressFill"></div>
+                        </div>
+                        <span class="player-time" id="playerTotalTime">0:00</span>
+                    </div>
+                </div>
+
+                <div class="pack-player-actions">
+                    <button class="player-action-btn" id="playerLikeBtn" title="Like">
+                        <i data-lucide="heart" class="lucide-icon"></i>
+                    </button>
+                    <button class="player-action-btn" id="playerDownloadBtn" title="Download">
+                        <i data-lucide="download" class="lucide-icon"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -3330,6 +3650,10 @@
             });
         }
 
+        // Track liked state (in-memory, could be persisted)
+        let likedTracks = new Set();
+        let isPlaying = false;
+
         // Open pack detail modal
         function openPackDetail(packId) {
             const pack = packsData[packId];
@@ -3346,21 +3670,30 @@
             document.getElementById('packDetailGenre').textContent = pack.genre;
             document.getElementById('packDetailPrice').innerHTML = `<i data-lucide="coins" class="lucide-icon"></i> ${pack.token_cost} tokens`;
 
-            // Populate tracks
+            // Populate tracks with like and download buttons
             const trackList = document.getElementById('packTrackList');
             if (pack.tracks && pack.tracks.length > 0) {
                 trackList.innerHTML = pack.tracks.map((track, index) => `
-                    <div class="pack-track-item" data-track-index="${index}" onclick="playPackTrack(${packId}, ${index})">
+                    <div class="pack-track-item" data-track-index="${index}" data-track-id="${track.id}">
                         <span class="pack-track-num">${index + 1}</span>
-                        <button class="pack-track-play">
+                        <button class="pack-track-play" onclick="event.stopPropagation(); playPackTrack(${packId}, ${index})">
                             <i data-lucide="play" class="lucide-icon"></i>
                         </button>
-                        <div class="pack-track-info">
+                        <div class="pack-track-info" onclick="playPackTrack(${packId}, ${index})">
                             <div class="pack-track-title">${track.title}</div>
                             <div class="pack-track-meta">
                                 ${track.bpm ? `<span>${track.bpm} BPM</span>` : ''}
                                 ${track.key ? `<span>${track.key}</span>` : ''}
                             </div>
+                        </div>
+                        <div class="pack-track-actions">
+                            <button class="track-action-btn ${likedTracks.has(track.id) ? 'liked' : ''}"
+                                    onclick="event.stopPropagation(); toggleTrackLike(${track.id})" title="Like">
+                                <i data-lucide="heart" class="lucide-icon"></i>
+                            </button>
+                            <button class="track-action-btn" onclick="event.stopPropagation(); downloadTrack(${track.id})" title="Download">
+                                <i data-lucide="download" class="lucide-icon"></i>
+                            </button>
                         </div>
                     </div>
                 `).join('');
@@ -3368,19 +3701,62 @@
                 trackList.innerHTML = '<div style="padding: 20px; color: #666; text-align: center;">No tracks in this pack</div>';
             }
 
-            // Show modal
+            // Show modal and hide player bar initially
             document.getElementById('packDetailPanel').classList.add('active');
             lucide.createIcons();
+        }
+
+        // Toggle track like
+        function toggleTrackLike(trackId) {
+            if (likedTracks.has(trackId)) {
+                likedTracks.delete(trackId);
+                showToast('Removed from liked', 'success');
+            } else {
+                likedTracks.add(trackId);
+                showToast('Added to liked!', 'success');
+            }
+
+            // Update UI
+            const trackBtn = document.querySelector(`.pack-track-item[data-track-id="${trackId}"] .track-action-btn`);
+            if (trackBtn) trackBtn.classList.toggle('liked', likedTracks.has(trackId));
+
+            // Update player bar like button if this is the current track
+            const pack = packsData[currentPackId];
+            if (pack && pack.tracks && pack.tracks[currentPackTrackIndex]?.id === trackId) {
+                document.getElementById('playerLikeBtn').classList.toggle('liked', likedTracks.has(trackId));
+            }
+        }
+
+        // Download individual track
+        async function downloadTrack(trackId) {
+            try {
+                const response = await fetch(`/api/beatpax/beats/${trackId}/download`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                if (data.error) {
+                    showToast(data.error, 'error');
+                } else {
+                    showToast('Track added to your library!', 'success');
+                    document.getElementById('tokenBalance').textContent = data.new_balance;
+                }
+            } catch (e) {
+                showToast('Failed to download track', 'error');
+            }
         }
 
         // Close pack detail modal
         document.getElementById('closePackDetail').addEventListener('click', () => {
             document.getElementById('packDetailPanel').classList.remove('active');
+            document.getElementById('packPlayerBar').classList.remove('active');
+            stopPlayback();
         });
 
         document.getElementById('packDetailPanel').addEventListener('click', (e) => {
             if (e.target.id === 'packDetailPanel') {
                 document.getElementById('packDetailPanel').classList.remove('active');
+                document.getElementById('packPlayerBar').classList.remove('active');
+                stopPlayback();
             }
         });
 
@@ -3401,17 +3777,158 @@
             // Update playing state in track list
             document.querySelectorAll('.pack-track-item').forEach((item, i) => {
                 item.classList.toggle('playing', i === trackIndex);
+                const playIcon = item.querySelector('.pack-track-play .lucide-icon');
+                if (playIcon) {
+                    playIcon.setAttribute('data-lucide', i === trackIndex ? 'pause' : 'play');
+                }
             });
+            lucide.createIcons();
 
             // Play audio
             const audio = document.getElementById('audioElement');
             audio.src = track.audio_url;
             audio.play();
+            isPlaying = true;
+
+            // Show and update player bar
+            const playerBar = document.getElementById('packPlayerBar');
+            playerBar.classList.add('active');
+            document.getElementById('packPlayerCover').src = pack.cover_url || '';
+            document.getElementById('packPlayerTitle').textContent = track.title;
+            document.getElementById('packPlayerArtist').textContent = pack.creator_name || 'Unknown';
+            updatePlayPauseButton();
+
+            // Update like button state
+            document.getElementById('playerLikeBtn').classList.toggle('liked', likedTracks.has(track.id));
 
             // Record play
             fetch(`/api/beatpax/beats/${track.id}/play`, { method: 'POST' });
+        }
 
-            showToast(`Playing: ${track.title}`, 'success');
+        // Update play/pause button icon
+        function updatePlayPauseButton() {
+            const icon = document.getElementById('playPauseIcon');
+            icon.setAttribute('data-lucide', isPlaying ? 'pause' : 'play');
+            lucide.createIcons();
+        }
+
+        // Stop playback
+        function stopPlayback() {
+            const audio = document.getElementById('audioElement');
+            audio.pause();
+            audio.currentTime = 0;
+            isPlaying = false;
+            updatePlayPauseButton();
+
+            // Reset playing state in track list
+            document.querySelectorAll('.pack-track-item').forEach(item => {
+                item.classList.remove('playing');
+                const playIcon = item.querySelector('.pack-track-play .lucide-icon');
+                if (playIcon) playIcon.setAttribute('data-lucide', 'play');
+            });
+            lucide.createIcons();
+        }
+
+        // Toggle play/pause
+        function togglePlayPause() {
+            const audio = document.getElementById('audioElement');
+            if (isPlaying) {
+                audio.pause();
+                isPlaying = false;
+            } else {
+                if (audio.src) {
+                    audio.play();
+                    isPlaying = true;
+                } else if (currentPackId) {
+                    playPackTrack(currentPackId, currentPackTrackIndex);
+                }
+            }
+            updatePlayPauseButton();
+        }
+
+        // Previous track
+        function previousTrack() {
+            if (!currentPackId) return;
+            const pack = packsData[currentPackId];
+            if (!pack || !pack.tracks) return;
+
+            const newIndex = currentPackTrackIndex > 0 ? currentPackTrackIndex - 1 : pack.tracks.length - 1;
+            playPackTrack(currentPackId, newIndex);
+        }
+
+        // Next track
+        function nextTrack() {
+            if (!currentPackId) return;
+            const pack = packsData[currentPackId];
+            if (!pack || !pack.tracks) return;
+
+            const newIndex = currentPackTrackIndex < pack.tracks.length - 1 ? currentPackTrackIndex + 1 : 0;
+            playPackTrack(currentPackId, newIndex);
+        }
+
+        // Player bar event listeners
+        document.getElementById('playerPlayPauseBtn').addEventListener('click', togglePlayPause);
+        document.getElementById('playerStopBtn').addEventListener('click', stopPlayback);
+        document.getElementById('playerPrevBtn').addEventListener('click', previousTrack);
+        document.getElementById('playerNextBtn').addEventListener('click', nextTrack);
+
+        document.getElementById('playerLikeBtn').addEventListener('click', () => {
+            const pack = packsData[currentPackId];
+            if (pack && pack.tracks && pack.tracks[currentPackTrackIndex]) {
+                toggleTrackLike(pack.tracks[currentPackTrackIndex].id);
+            }
+        });
+
+        document.getElementById('playerDownloadBtn').addEventListener('click', () => {
+            const pack = packsData[currentPackId];
+            if (pack && pack.tracks && pack.tracks[currentPackTrackIndex]) {
+                downloadTrack(pack.tracks[currentPackTrackIndex].id);
+            }
+        });
+
+        // Progress bar click to seek
+        document.getElementById('playerProgressBar').addEventListener('click', (e) => {
+            const audio = document.getElementById('audioElement');
+            if (!audio.duration) return;
+
+            const rect = e.currentTarget.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = percent * audio.duration;
+        });
+
+        // Audio time update
+        const audioElement = document.getElementById('audioElement');
+        audioElement.addEventListener('timeupdate', () => {
+            const current = audioElement.currentTime;
+            const duration = audioElement.duration;
+
+            if (duration) {
+                const percent = (current / duration) * 100;
+                document.getElementById('playerProgressFill').style.width = percent + '%';
+                document.getElementById('playerCurrentTime').textContent = formatTime(current);
+                document.getElementById('playerTotalTime').textContent = formatTime(duration);
+            }
+        });
+
+        audioElement.addEventListener('ended', () => {
+            nextTrack();
+        });
+
+        audioElement.addEventListener('pause', () => {
+            isPlaying = false;
+            updatePlayPauseButton();
+        });
+
+        audioElement.addEventListener('play', () => {
+            isPlaying = true;
+            updatePlayPauseButton();
+        });
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
 
         // Pack detail action buttons
@@ -3428,24 +3945,26 @@
             const pack = packsData[currentPackId];
             if (!pack || !pack.tracks) return;
 
-            // Download first track as example (in real app, would download all or redirect)
-            const firstTrack = pack.tracks[0];
-            if (firstTrack) {
+            // Download all tracks in the pack
+            let downloaded = 0;
+            for (const track of pack.tracks) {
                 try {
-                    const response = await fetch(`/api/beatpax/beats/${firstTrack.id}/download`, {
+                    const response = await fetch(`/api/beatpax/beats/${track.id}/download`, {
                         method: 'POST'
                     });
                     const data = await response.json();
-                    if (data.error) {
-                        showToast(data.error, 'error');
-                    } else {
-                        showToast('Pack added to your library!', 'success');
-                        // Update token display
+                    if (!data.error) {
+                        downloaded++;
                         document.getElementById('tokenBalance').textContent = data.new_balance;
                     }
                 } catch (e) {
-                    showToast('Failed to download pack', 'error');
+                    console.error('Download error:', e);
                 }
+            }
+            if (downloaded > 0) {
+                showToast(`${downloaded} tracks added to your library!`, 'success');
+            } else {
+                showToast('Failed to download pack', 'error');
             }
         });
 
