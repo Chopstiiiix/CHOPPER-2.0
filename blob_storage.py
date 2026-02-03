@@ -44,6 +44,9 @@ def upload_file(file: FileStorage, path: str, content_type: Optional[str] = None
         if not content_type:
             content_type = file.content_type or 'application/octet-stream'
 
+        # Use multipart upload for files larger than 4MB
+        use_multipart = file_size > 4 * 1024 * 1024
+
         # Upload to Vercel Blob (correct API usage)
         response = put(
             path,  # First positional argument
@@ -53,7 +56,9 @@ def upload_file(file: FileStorage, path: str, content_type: Optional[str] = None
                 'token': BLOB_TOKEN,
                 'addRandomSuffix': False,
                 'contentType': content_type
-            }
+            },
+            multipart=use_multipart,
+            timeout=120  # Increase timeout for large files
         )
 
         blob_url = response['url']

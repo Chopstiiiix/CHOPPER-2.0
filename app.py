@@ -1617,6 +1617,88 @@ def beatpax_beats():
         return jsonify({'error': 'Failed to fetch beats'}), 500
 
 
+@app.route('/api/beatpax/upload-config', methods=['GET'])
+@login_required
+def beatpax_upload_config():
+    """Get upload configuration for client-side uploads"""
+    is_vercel = os.environ.get('VERCEL') == 'true'
+    blob_configured = blob_storage.is_blob_configured()
+    blob_token = os.environ.get('BLOB_READ_WRITE_TOKEN', '') if blob_configured else ''
+
+    return jsonify({
+        'is_production': is_vercel,
+        'blob_configured': blob_configured,
+        'blob_token': blob_token if is_vercel else '',  # Only expose token in production for client uploads
+        'max_file_size': 4 * 1024 * 1024 if is_vercel else 50 * 1024 * 1024,  # 4MB on Vercel, 50MB local
+        'server_upload_available': not is_vercel or not blob_configured  # Use server upload if local or no blob
+    })
+
+
+@app.route('/api/beatpax/create-beat', methods=['POST'])
+@login_required
+def beatpax_create_beat():
+    """Create a beat record from already-uploaded files (for client-side uploads)"""
+    user_id = session.get('user_id')
+
+    try:
+        data = request.get_json()
+
+        title = (data.get('title') or '').strip()
+        genre = (data.get('genre') or '').strip()
+        audio_url = (data.get('audio_url') or '').strip()
+        cover_url = (data.get('cover_url') or '').strip() or None
+        bpm = data.get('bpm')
+        key = (data.get('key') or '').strip()
+        tags = (data.get('tags') or '').strip()
+        token_cost = data.get('token_cost', 5)
+
+        # Validate required fields
+        if not title:
+            return jsonify({'error': 'Title is required'}), 400
+        if not genre:
+            return jsonify({'error': 'Genre is required'}), 400
+        if not audio_url:
+            return jsonify({'error': 'Audio URL is required'}), 400
+
+        # Validate URL is from Vercel Blob (allow test URLs in development)
+        is_valid_url = (
+            audio_url.startswith('https://') and
+            ('blob.vercel-storage.com' in audio_url or 'vercel-storage.com' in audio_url)
+        )
+        if not is_valid_url:
+            return jsonify({'error': 'Invalid audio URL. Must be a Vercel Blob URL.'}), 400
+
+        # Validate token cost
+        token_cost = max(3, min(20, int(token_cost)))
+
+        # Create beat record
+        beat = Beat(
+            title=title,
+            creator_id=user_id,
+            audio_url=audio_url,
+            cover_url=cover_url,
+            genre=genre,
+            bpm=int(bpm) if bpm else None,
+            key=key,
+            tags=tags,
+            token_cost=token_cost
+        )
+
+        db.session.add(beat)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'beat': beat.to_dict(),
+            'message': 'Beat created successfully!'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating beat: {e}")
+        return jsonify({'error': 'Failed to create beat'}), 500
+
+
 @app.route('/api/beatpax/upload', methods=['POST'])
 @login_required
 def beatpax_upload():
@@ -1722,10 +1804,20 @@ def beatpax_upload():
 
     except Exception as e:
         db.session.rollback()
-        print(f"Error uploading beat: {e}")
         import traceback
+        error_details = str(e)
         traceback.print_exc()
-        return jsonify({'error': 'Failed to upload beat'}), 500
+
+        # Check for specific error types
+        if 'Blob' in error_details or 'BLOB' in error_details:
+            return jsonify({'error': 'Storage service error. Please try again or use a smaller file.'}), 500
+        elif 'size' in error_details.lower() or 'large' in error_details.lower():
+            return jsonify({'error': 'File too large. Please use a file under 4MB for web uploads.'}), 413
+        elif 'timeout' in error_details.lower():
+            return jsonify({'error': 'Upload timed out. Please try again with a smaller file.'}), 504
+
+        print(f"Error uploading beat: {error_details}")
+        return jsonify({'error': f'Upload failed: {error_details[:100]}'}), 500
 
 
 @app.route('/api/beatpax/beats/<int:beat_id>/play', methods=['POST'])

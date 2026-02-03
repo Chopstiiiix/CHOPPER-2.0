@@ -715,6 +715,112 @@
             display: none;
         }
 
+        .file-upload .file-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .label-hint {
+            font-size: 11px;
+            color: #666;
+            font-weight: normal;
+        }
+
+        /* File list for multiple uploads */
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .file-list-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #1a1a1a;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #2d2d2d;
+        }
+
+        .file-list-item .file-icon {
+            color: #666;
+            flex-shrink: 0;
+        }
+
+        .file-list-item .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-list-item .file-title-input {
+            width: 100%;
+            background: #0d0d0d;
+            border: 1px solid #2d2d2d;
+            border-radius: 4px;
+            padding: 6px 10px;
+            color: #fff;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .file-list-item .file-title-input:focus {
+            border-color: #fff;
+            outline: none;
+        }
+
+        .file-list-item .file-meta {
+            font-size: 11px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-list-item .remove-file {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 4px;
+            flex-shrink: 0;
+        }
+
+        .file-list-item .remove-file:hover {
+            color: #ff4444;
+        }
+
+        /* Upload progress */
+        .upload-progress {
+            margin-bottom: 16px;
+        }
+
+        .upload-progress .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .upload-progress .progress-bar-container {
+            height: 6px;
+            background: #1a1a1a;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .upload-progress .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
         .token-slider {
             display: flex;
             align-items: center;
@@ -1381,19 +1487,30 @@
     <div class="upload-panel" id="uploadPanel">
         <div class="upload-modal">
             <div class="upload-header">
-                <h2>Upload Beat</h2>
+                <h2>Upload Beats</h2>
                 <button class="close-btn" id="closeUpload">
                     <i data-lucide="x" class="lucide-icon"></i>
                 </button>
             </div>
             <form class="upload-form" id="uploadForm" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label class="form-label">Title *</label>
-                    <input type="text" class="form-input" name="title" placeholder="Beat title" required>
+                    <label class="form-label">Audio Files * (MP3, WAV, FLAC - max 50MB each)</label>
+                    <div class="file-upload" id="audioUpload">
+                        <i data-lucide="music" class="lucide-icon"></i>
+                        <p>Click to select audio files</p>
+                        <p class="file-hint">You can select multiple files</p>
+                        <input type="file" name="audio" accept=".mp3,.wav,.flac,.m4a" multiple required>
+                    </div>
+                </div>
+
+                <!-- Dynamic file list with individual titles -->
+                <div class="form-group" id="fileListContainer" style="display: none;">
+                    <label class="form-label">Selected Files</label>
+                    <div class="file-list" id="fileList"></div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Genre *</label>
+                    <label class="form-label">Genre * <span class="label-hint">(applies to all)</span></label>
                     <select class="form-select" name="genre" required>
                         <option value="">Select genre</option>
                         <option value="Hip-Hop">Hip-Hop</option>
@@ -1418,22 +1535,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Tags</label>
+                    <label class="form-label">Tags <span class="label-hint">(applies to all)</span></label>
                     <input type="text" class="form-input" name="tags" placeholder="dark, melodic, trap (comma separated)">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Audio File * (MP3, WAV, FLAC - max 50MB)</label>
-                    <div class="file-upload" id="audioUpload">
-                        <i data-lucide="music" class="lucide-icon"></i>
-                        <p>Click to upload audio</p>
-                        <p class="file-name" id="audioFileName"></p>
-                        <input type="file" name="audio" accept=".mp3,.wav,.flac,.m4a" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Cover Image (optional)</label>
+                    <label class="form-label">Cover Image <span class="label-hint">(optional, applies to all)</span></label>
                     <div class="file-upload" id="coverUpload">
                         <i data-lucide="image" class="lucide-icon"></i>
                         <p>Click to upload cover</p>
@@ -1443,15 +1550,26 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Token Price (3-20 tokens)</label>
+                    <label class="form-label">Token Price <span class="label-hint">(3-20 tokens, applies to all)</span></label>
                     <div class="token-slider">
                         <input type="range" name="token_cost" min="3" max="20" value="5" id="tokenSlider">
                         <span class="token-value" id="tokenSliderValue">5 tokens</span>
                     </div>
                 </div>
 
+                <!-- Upload progress -->
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress-info">
+                        <span id="uploadProgressText">Uploading 0 of 0...</span>
+                        <span id="uploadProgressPercent">0%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" id="uploadProgressBar"></div>
+                    </div>
+                </div>
+
                 <button type="submit" class="upload-submit" id="uploadSubmit">
-                    Upload Beat
+                    Upload Beats
                 </button>
             </form>
         </div>
@@ -1513,6 +1631,29 @@
         let currentBeat = null;
         let ownedBeatIds = [];
         const audio = document.getElementById('audioElement');
+
+        // Upload configuration (fetched from server)
+        let uploadConfig = {
+            is_production: false,
+            blob_configured: false,
+            blob_token: '',
+            max_file_size: 50 * 1024 * 1024,
+            server_upload_available: true
+        };
+
+        // Fetch upload config
+        async function fetchUploadConfig() {
+            try {
+                const response = await fetch('/api/beatpax/upload-config');
+                if (response.ok) {
+                    uploadConfig = await response.json();
+                    console.log('Upload config:', uploadConfig.is_production ? 'Production mode' : 'Local mode');
+                }
+            } catch (e) {
+                console.log('Using default upload config');
+            }
+        }
+        fetchUploadConfig();
 
         // Elements
         const burgerMenu = document.getElementById('burgerMenu');
@@ -1586,10 +1727,64 @@
             coverUpload.querySelector('input').click();
         });
 
+        // Track selected files for multi-upload
+        let selectedAudioFiles = [];
+
         audioUpload.querySelector('input').addEventListener('change', (e) => {
-            if (e.target.files.length) {
-                document.getElementById('audioFileName').textContent = e.target.files[0].name;
+            const files = Array.from(e.target.files);
+            if (files.length) {
+                selectedAudioFiles = files;
                 audioUpload.classList.add('has-file');
+
+                // Show file list
+                const fileListContainer = document.getElementById('fileListContainer');
+                const fileList = document.getElementById('fileList');
+                fileListContainer.style.display = 'block';
+
+                // Generate file list with individual title inputs
+                fileList.innerHTML = files.map((file, index) => {
+                    // Generate default title from filename (remove extension)
+                    const defaultTitle = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+                    const fileSize = (file.size / (1024 * 1024)).toFixed(1);
+
+                    return `
+                        <div class="file-list-item" data-index="${index}">
+                            <i data-lucide="music" class="lucide-icon file-icon"></i>
+                            <div class="file-info">
+                                <input type="text" class="file-title-input"
+                                       data-index="${index}"
+                                       value="${defaultTitle}"
+                                       placeholder="Beat title">
+                                <div class="file-meta">${file.name} (${fileSize} MB)</div>
+                            </div>
+                            <button type="button" class="remove-file" data-index="${index}">
+                                <i data-lucide="x" class="lucide-icon"></i>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+
+                lucide.createIcons();
+
+                // Add remove handlers
+                fileList.querySelectorAll('.remove-file').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const index = parseInt(btn.dataset.index);
+                        selectedAudioFiles = selectedAudioFiles.filter((_, i) => i !== index);
+
+                        // Re-render list
+                        if (selectedAudioFiles.length === 0) {
+                            fileListContainer.style.display = 'none';
+                            audioUpload.classList.remove('has-file');
+                        } else {
+                            // Trigger change event to re-render
+                            const dt = new DataTransfer();
+                            selectedAudioFiles.forEach(f => dt.items.add(f));
+                            audioUpload.querySelector('input').files = dt.files;
+                            audioUpload.querySelector('input').dispatchEvent(new Event('change'));
+                        }
+                    });
+                });
             }
         });
 
@@ -1943,82 +2138,226 @@
         });
 
         // Upload form
+        // Client-side upload to Vercel Blob (for production)
+        async function uploadToBlob(file, path) {
+            const response = await fetch(`https://blob.vercel-storage.com/${path}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${uploadConfig.blob_token}`,
+                    'x-api-version': '7',
+                    'Content-Type': file.type || 'application/octet-stream'
+                },
+                body: file
+            });
+
+            if (!response.ok) {
+                throw new Error(`Blob upload failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.url;
+        }
+
+        // Generate unique filename
+        function generateUniqueFilename(originalName) {
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 8);
+            const ext = originalName.split('.').pop();
+            const baseName = originalName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
+            return `${baseName}_${timestamp}_${random}.${ext}`;
+        }
+
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const form = e.target;
-            const audioInput = form.querySelector('input[name="audio"]');
-            const titleInput = form.querySelector('input[name="title"]');
             const genreInput = form.querySelector('select[name="genre"]');
             const submitBtn = document.getElementById('uploadSubmit');
+            const progressContainer = document.getElementById('uploadProgress');
+            const progressText = document.getElementById('uploadProgressText');
+            const progressPercent = document.getElementById('uploadProgressPercent');
+            const progressBar = document.getElementById('uploadProgressBar');
 
-            // Validate before submitting
-            if (!titleInput.value.trim()) {
-                showToast('Please enter a title', 'error');
-                return;
-            }
-
+            // Validate genre
             if (!genreInput.value) {
                 showToast('Please select a genre', 'error');
                 return;
             }
 
-            if (!audioInput.files || !audioInput.files.length) {
-                showToast('Please select an audio file', 'error');
+            // Validate files
+            if (!selectedAudioFiles || !selectedAudioFiles.length) {
+                showToast('Please select at least one audio file', 'error');
                 return;
             }
 
-            const audioFile = audioInput.files[0];
-            const maxSize = 50 * 1024 * 1024; // 50MB
-            if (audioFile.size > maxSize) {
-                showToast('Audio file too large. Maximum 50MB', 'error');
-                return;
+            // Validate file sizes based on environment
+            const maxSize = uploadConfig.max_file_size;
+            const maxSizeMB = Math.round(maxSize / (1024 * 1024));
+            for (const file of selectedAudioFiles) {
+                if (file.size > maxSize) {
+                    showToast(`File "${file.name}" is too large. Maximum ${maxSizeMB}MB`, 'error');
+                    return;
+                }
             }
 
-            const formData = new FormData(form);
+            // Get titles for each file
+            const titleInputs = document.querySelectorAll('.file-title-input');
+            const titles = Array.from(titleInputs).map(input => input.value.trim());
 
+            // Validate all titles
+            for (let i = 0; i < titles.length; i++) {
+                if (!titles[i]) {
+                    showToast(`Please enter a title for file ${i + 1}`, 'error');
+                    return;
+                }
+            }
+
+            // Get shared form values
+            const genre = genreInput.value;
+            const bpm = form.querySelector('input[name="bpm"]').value;
+            const key = form.querySelector('input[name="key"]').value;
+            const tags = form.querySelector('input[name="tags"]').value;
+            const tokenCost = form.querySelector('input[name="token_cost"]').value;
+            const coverInput = form.querySelector('input[name="cover"]');
+            const coverFile = coverInput.files[0] || null;
+
+            // Show progress
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Uploading...';
+            submitBtn.style.display = 'none';
+            progressContainer.style.display = 'block';
 
-            try {
-                const response = await fetch('/api/beatpax/upload', {
-                    method: 'POST',
-                    body: formData
-                });
+            let successCount = 0;
+            let failCount = 0;
+            const totalFiles = selectedAudioFiles.length;
+            const useClientUpload = uploadConfig.is_production && uploadConfig.blob_configured && uploadConfig.blob_token;
 
-                // Handle authentication error
-                if (response.status === 401) {
-                    showToast('Please login to upload beats', 'error');
-                    setTimeout(() => window.location.href = '/login', 1500);
-                    return;
+            // Upload cover once if using client upload
+            let sharedCoverUrl = null;
+            if (useClientUpload && coverFile) {
+                try {
+                    progressText.textContent = 'Uploading cover image...';
+                    const coverPath = `beats/covers/${generateUniqueFilename(coverFile.name)}`;
+                    sharedCoverUrl = await uploadToBlob(coverFile, coverPath);
+                } catch (error) {
+                    console.error('Cover upload failed:', error);
                 }
+            }
 
-                const data = await response.json();
+            // Upload each file
+            for (let i = 0; i < totalFiles; i++) {
+                const file = selectedAudioFiles[i];
+                const title = titles[i];
 
-                if (!response.ok || data.error) {
-                    showToast(data.error || 'Upload failed', 'error');
-                    return;
+                // Update progress
+                progressText.textContent = `Uploading ${i + 1} of ${totalFiles}...`;
+                progressPercent.textContent = `${Math.round((i / totalFiles) * 100)}%`;
+                progressBar.style.width = `${(i / totalFiles) * 100}%`;
+
+                try {
+                    if (useClientUpload) {
+                        // Client-side upload directly to Vercel Blob
+                        const audioPath = `beats/audio/${generateUniqueFilename(file.name)}`;
+                        const audioUrl = await uploadToBlob(file, audioPath);
+
+                        // Create beat record via API
+                        const response = await fetch('/api/beatpax/create-beat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                title,
+                                genre,
+                                bpm: bpm || null,
+                                key: key || '',
+                                tags: tags || '',
+                                token_cost: tokenCost,
+                                audio_url: audioUrl,
+                                cover_url: sharedCoverUrl
+                            })
+                        });
+
+                        if (response.status === 401) {
+                            showToast('Please login to upload beats', 'error');
+                            setTimeout(() => window.location.href = '/login', 1500);
+                            return;
+                        }
+
+                        const data = await response.json();
+                        if (response.ok && !data.error) {
+                            successCount++;
+                        } else {
+                            failCount++;
+                            console.error(`Failed to create beat "${title}":`, data.error);
+                        }
+                    } else {
+                        // Server-side upload (local development)
+                        const formData = new FormData();
+                        formData.append('audio', file);
+                        formData.append('title', title);
+                        formData.append('genre', genre);
+                        if (bpm) formData.append('bpm', bpm);
+                        if (key) formData.append('key', key);
+                        if (tags) formData.append('tags', tags);
+                        formData.append('token_cost', tokenCost);
+                        if (coverFile) formData.append('cover', coverFile);
+
+                        const response = await fetch('/api/beatpax/upload', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (response.status === 401) {
+                            showToast('Please login to upload beats', 'error');
+                            setTimeout(() => window.location.href = '/login', 1500);
+                            return;
+                        }
+
+                        const data = await response.json();
+                        if (response.ok && !data.error) {
+                            successCount++;
+                        } else {
+                            failCount++;
+                            console.error(`Failed to upload "${title}":`, data.error);
+                            showToast(data.error || 'Upload failed', 'error');
+                        }
+                    }
+                } catch (error) {
+                    failCount++;
+                    console.error(`Error uploading "${title}":`, error);
                 }
+            }
 
-                showToast(data.message || 'Beat uploaded!', 'success');
+            // Complete
+            progressPercent.textContent = '100%';
+            progressBar.style.width = '100%';
+
+            // Show result
+            if (failCount === 0) {
+                showToast(`Successfully uploaded ${successCount} beat${successCount > 1 ? 's' : ''}!`, 'success');
+            } else if (successCount > 0) {
+                showToast(`Uploaded ${successCount} of ${totalFiles} beats. ${failCount} failed.`, 'error');
+            } else {
+                showToast('All uploads failed. Please try again.', 'error');
+            }
+
+            // Reset form
+            setTimeout(() => {
                 uploadPanel.classList.remove('active');
                 form.reset();
-                document.getElementById('audioFileName').textContent = '';
+                selectedAudioFiles = [];
+                document.getElementById('fileListContainer').style.display = 'none';
+                document.getElementById('fileList').innerHTML = '';
                 document.getElementById('coverFileName').textContent = '';
                 audioUpload.classList.remove('has-file');
                 coverUpload.classList.remove('has-file');
                 document.getElementById('tokenSliderValue').textContent = '5 tokens';
+                progressContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+                submitBtn.style.display = 'block';
+                submitBtn.disabled = false;
 
                 // Reload catalog
                 loadCatalog();
-
-            } catch (error) {
-                console.error('Error uploading:', error);
-                showToast('Upload failed. Please try again.', 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Upload Beat';
-            }
+            }, 1000);
         });
 
         // Token packages
