@@ -454,12 +454,14 @@ For more information: https://en.wikipedia.org/wiki/Chopstix_(music_producer)"""
         success_message = f"✅ OpenAI API Success! Request ID: {response.id}, Model: {response.model}, Tokens: {response.usage.total_tokens}"
         print(success_message, file=sys.stdout, flush=True)
 
-        # Also log to file for persistent tracking
-        with open('/tmp/ask_chopper_api_logs.txt', 'a') as f:
-            from datetime import datetime
-            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            f.write(f"[{timestamp}] {success_message}\n")
-            f.write(f"[{timestamp}] Check OpenAI dashboard: https://platform.openai.com/usage\n")
+        # Also log to file for persistent tracking (skip on serverless)
+        try:
+            with open('/tmp/ask_chopper_api_logs.txt', 'a') as f:
+                from datetime import datetime
+                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                f.write(f"[{timestamp}] {success_message}\n")
+        except:
+            pass  # Ignore file logging errors in serverless environment
 
         response_text = response.choices[0].message.content
         # Prepend Chopper signature to response
@@ -975,10 +977,12 @@ def chat():
 
     except Exception as e:
         db.session.rollback()
-        print(f"Error in chat endpoint: {e}")
         import traceback
-        traceback.print_exc()
-        return jsonify({'error': 'An error occurred while processing your message'}), 500
+        error_details = traceback.format_exc()
+        print(f"Error in chat endpoint: {e}")
+        print(f"Full traceback: {error_details}")
+        # Return detailed error for debugging
+        return jsonify({'error': f'Error: {str(e)}'}), 500
 
 @app.route('/chat-with-document', methods=['POST'])
 @login_required
