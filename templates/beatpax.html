@@ -3228,6 +3228,30 @@
             fill: #ff4757;
         }
 
+        .sidebar-track-item.playing {
+            background: #1a1a1a;
+            border-left: 3px solid #fff;
+        }
+
+        .sidebar-track-play-btn {
+            background: none;
+            border: none;
+            color: #888;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .sidebar-track-play-btn:hover {
+            background: #2d2d2d;
+            color: #fff;
+        }
+
+        .sidebar-track-item.playing .sidebar-track-play-btn {
+            color: #fff;
+        }
+
         /* Empty state */
         .sidebar-empty-state {
             text-align: center;
@@ -5416,6 +5440,7 @@
         // Track liked state (in-memory, could be persisted)
         let likedTracks = new Set();
         let isPlaying = false;
+        let currentSidebarBeatId = null;
 
         // Open pack detail modal
         function openPackDetail(packId) {
@@ -5609,6 +5634,7 @@
 
             currentPackId = packId;
             currentPackTrackIndex = trackIndex;
+            currentSidebarBeatId = null;
             const track = pack.tracks[trackIndex];
 
             // Update playing state in track list
@@ -5660,8 +5686,10 @@
             audio.pause();
             audio.currentTime = 0;
             isPlaying = false;
+            currentSidebarBeatId = null;
             updatePlayPauseButton();
             updatePackCardPlayButtons();
+            updateSidebarTrackPlayButtons();
 
             // Reset playing state in track list
             document.querySelectorAll('.pack-track-item').forEach(item => {
@@ -5708,6 +5736,62 @@
 
             const newIndex = currentPackTrackIndex < pack.tracks.length - 1 ? currentPackTrackIndex + 1 : 0;
             playPackTrack(currentPackId, newIndex);
+        }
+
+        // Toggle play/pause for sidebar tracks
+        function toggleSidebarTrackPlay(beatId, audioUrl, title, creator, coverUrl) {
+            const audio = document.getElementById('audioElement');
+
+            if (currentSidebarBeatId === beatId && audio.src) {
+                // Same track — toggle play/pause
+                if (isPlaying) {
+                    audio.pause();
+                } else {
+                    audio.play();
+                }
+            } else {
+                // Different track — start playing
+                currentSidebarBeatId = beatId;
+                currentPackId = null;
+
+                audio.src = audioUrl;
+                audio.play();
+                isPlaying = true;
+
+                // Update player bar
+                const playerBar = document.getElementById('packPlayerBar');
+                playerBar.classList.add('active');
+                document.getElementById('packPlayerCover').src = coverUrl || '';
+                document.getElementById('packPlayerTitle').textContent = title;
+                document.getElementById('packPlayerArtist').textContent = creator || 'Unknown';
+                updatePlayPauseButton();
+                updateSidebarTrackPlayButtons();
+
+                // Update like button state
+                document.getElementById('playerLikeBtn').classList.toggle('liked', likedTracks.has(beatId));
+
+                // Record play
+                fetch(`/api/beatpax/beats/${beatId}/play`, { method: 'POST' });
+            }
+        }
+
+        // Update play/pause icons on all sidebar track items
+        function updateSidebarTrackPlayButtons() {
+            document.querySelectorAll('.sidebar-track-item').forEach(item => {
+                const trackId = parseInt(item.dataset.trackId);
+                const btn = item.querySelector('.sidebar-track-play-btn');
+                const isCurrent = (currentSidebarBeatId === trackId && isPlaying);
+
+                item.classList.toggle('playing', currentSidebarBeatId === trackId && isPlaying);
+
+                if (btn) {
+                    const icon = btn.querySelector('.lucide-icon');
+                    if (icon) {
+                        icon.setAttribute('data-lucide', isCurrent ? 'pause' : 'play');
+                    }
+                }
+            });
+            lucide.createIcons();
         }
 
         // Player bar event listeners
@@ -5762,6 +5846,7 @@
             updatePlayPauseButton();
             updateTrackIcons();
             updatePackCardPlayButtons();
+            updateSidebarTrackPlayButtons();
         });
 
         audioElement.addEventListener('play', () => {
@@ -5769,6 +5854,7 @@
             updatePlayPauseButton();
             updateTrackIcons();
             updatePackCardPlayButtons();
+            updateSidebarTrackPlayButtons();
         });
 
         // Update track play/pause icons based on current state
@@ -6566,6 +6652,9 @@
                         <div class="sidebar-track-meta">${beat.creator_name || 'Unknown'} ${beat.bpm ? '• ' + beat.bpm + ' BPM' : ''}</div>
                     </div>
                     <div class="sidebar-track-actions">
+                        <button class="sidebar-track-play-btn" onclick="toggleSidebarTrackPlay(${beat.id}, '${(beat.audio_url || '').replace(/'/g, "\\'")}', '${(beat.title || '').replace(/'/g, "\\'")}', '${(beat.creator_name || 'Unknown').replace(/'/g, "\\'")}', '${(beat.cover_url || '').replace(/'/g, "\\'")}')" title="Play">
+                            <i data-lucide="play" class="lucide-icon"></i>
+                        </button>
                         ${showLike ? `
                             <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="toggleTrackLike(${beat.id})" title="Like">
                                 <i data-lucide="heart" class="lucide-icon"></i>
