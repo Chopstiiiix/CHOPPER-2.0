@@ -1,163 +1,641 @@
-/* Hero Section */
-.hero-section {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center; /* Changed from flex-start to center */
-    overflow: hidden;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask Chopper - AI Assistant</title>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-#spline-background {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    border: none;
-    pointer-events: auto;
-    touch-action: auto;
-}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Söhne", Helvetica, Arial, sans-serif;
+            background: #0d0d0d;
+            color: #ffffff;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+        }
 
-.hero-content {
-    position: relative;
-    z-index: 10;
-    text-align: center;
-    max-width: 1200px;
-    padding: 0 20px;
-    margin-top: 0; /* Changed from 80px to 0 */
-    pointer-events: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem; /* Adds consistent spacing between elements */
-}
+        /* Hero Section */
+        .hero-section {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
 
-.cta-button {
-    display: inline-block;
-    padding: 16px 40px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #000000;
-    background: #ffffff;
-    border: none;
-    border-radius: 12px;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    margin-top: 0; /* Removed the 600px margin */
-}
+        #spline-background {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            border: none;
+            pointer-events: auto;
+            touch-action: auto;
+        }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .hero-section {
-        justify-content: center;
-        overflow: hidden;
-        padding: 20px;
-    }
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 1200px;
+            padding: 0 20px;
+            margin-top: 0;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
 
-    .hero-content {
-        margin-top: 0;
-        gap: 1.5rem; /* Smaller gap on mobile */
-    }
+        .hero-content .cta-button {
+            pointer-events: auto;
+        }
 
-    .hero-content h1 {
-        font-size: 2.5rem;
-    }
+        .hero-gradient {
+            position: absolute;
+            top: -10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            filter: blur(30px);
+            pointer-events: none;
+            z-index: 2;
+        }
 
-    .hero-content p {
-        font-size: 0.9rem;
-        padding: 0 10px;
-    }
+        .hero-content h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -2px;
+            background: linear-gradient(to right, #ffffff, #999999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-    .cta-button {
-        margin-top: 0;
-        padding: 14px 32px;
-        font-size: 1rem;
-    }
+        .hero-content p {
+            font-size: 1.1rem;
+            color: #999999;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
 
-    #spline-background {
-        width: 100%;
-        height: 50vh; /* Fixed height for better control */
-        max-height: 400px; /* Maximum height */
-        min-height: 300px; /* Minimum height */
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        -webkit-overflow-scrolling: touch;
-        object-fit: contain;
-        position: absolute;
-    }
+        .cta-button {
+            display: inline-block;
+            padding: 16px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #000000;
+            background: #ffffff;
+            border: none;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-top: 0;
+        }
 
-    /* Adjust hero content positioning to make room for Spline */
-    .hero-content {
-        position: absolute;
-        top: auto;
-        bottom: 20%; /* Position content above the Spline */
-        transform: translateY(0);
-        width: 100%;
-    }
+        .cta-button:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+        }
 
-    .hero-gradient {
-        top: 30%; /* Adjust gradient position */
-        height: 60%;
-    }
-}
+        /* Second Section - Placeholder */
+        .second-section {
+            position: relative;
+            padding: 120px 20px;
+            background: #0d0d0d;
+            text-align: center;
+        }
 
-/* iPhone specific optimizations */
-@media (max-width: 430px) {
-    #spline-background {
-        width: 95%;
-        height: 45vh; /* Slightly smaller on very small screens */
-        max-height: 350px;
-        min-height: 250px;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        object-fit: contain;
-    }
+        .second-section h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: #ffffff;
+        }
 
-    .hero-content {
-        bottom: 15%; /* Adjust for smaller screens */
-        gap: 1rem;
-    }
+        .asset-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-    .hero-content h1 {
-        font-size: 2rem;
-    }
+        .asset-image {
+            width: 100%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
 
-    .hero-content p {
-        font-size: 0.85rem;
-    }
+        .asset-image:hover {
+            transform: scale(1.02);
+        }
 
-    .cta-button {
-        padding: 12px 28px;
-        font-size: 0.95rem;
-    }
+        /* Benefits Section */
+        .benefits-section {
+            padding: 120px 20px;
+            background: #0d0d0d;
+        }
 
-    .hero-gradient {
-        top: 35%;
-        height: 50%;
-    }
-}
+        .benefits-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-/* Extra small devices (like iPhone 5/SE) */
-@media (max-width: 320px) {
-    #spline-background {
-        height: 40vh;
-        max-height: 300px;
-        min-height: 220px;
-    }
+        .benefits-section h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 4rem;
+            color: #ffffff;
+        }
 
-    .hero-content {
-        bottom: 10%;
-    }
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
 
-    .hero-content h1 {
-        font-size: 1.75rem;
-    }
-}
+        .benefit-card {
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid #2d2d2d;
+            transition: all 0.3s ease;
+        }
+
+        .benefit-card:hover {
+            border-color: #ffffff;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+        }
+
+        .benefit-card .benefit-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            border: 1px solid #3a3a3a;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .benefit-card:hover .benefit-icon {
+            transform: scale(1.1) rotate(-5deg);
+            background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
+            border-color: #ffffff;
+        }
+
+        .benefit-card .benefit-icon .lucide-icon {
+            width: 24px;
+            height: 24px;
+            color: #ffffff;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .benefit-card:hover .benefit-icon .lucide-icon {
+            transform: scale(1.1);
+        }
+
+        .benefit-card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        .benefit-card p {
+            color: #999999;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        /* CTA Button Icon Animation */
+        .cta-button .lucide-icon {
+            width: 20px;
+            height: 20px;
+            margin-left: 8px;
+            vertical-align: middle;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .cta-button:hover .lucide-icon {
+            transform: translateX(5px);
+        }
+
+        /* Footer */
+        .footer {
+            background: #0d0d0d;
+            padding: 60px 20px 40px;
+            border-top: 1px solid #2d2d2d;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .footer-text {
+            font-size: 1rem;
+            color: #666666;
+            margin-bottom: 10px;
+        }
+
+        .footer-credits {
+            font-size: 0.9rem;
+            color: #999999;
+        }
+
+        .footer-credits strong {
+            color: #ffffff;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-section {
+                justify-content: center;
+                overflow: hidden;
+                padding: 20px;
+            }
+
+            .hero-content {
+                margin-top: 0;
+                gap: 1.5rem;
+            }
+
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-content p {
+                font-size: 0.9rem;
+                padding: 0 10px;
+            }
+
+            .cta-button {
+                margin-top: 0;
+                padding: 14px 32px;
+                font-size: 1rem;
+            }
+
+            #spline-background {
+                width: 100%;
+                height: 50vh;
+                max-height: 400px;
+                min-height: 300px;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                -webkit-overflow-scrolling: touch;
+                object-fit: contain;
+                position: absolute;
+            }
+
+            /* Adjust hero content positioning to make room for Spline */
+            .hero-content {
+                position: absolute;
+                top: auto;
+                bottom: 20%;
+                transform: translateY(0);
+                width: 100%;
+            }
+
+            .hero-gradient {
+                top: 30%;
+                height: 60%;
+            }
+
+            .benefits-section h2,
+            .second-section h2 {
+                font-size: 2rem;
+            }
+
+            .benefits-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* iPhone specific optimizations */
+        @media (max-width: 430px) {
+            #spline-background {
+                width: 95%;
+                height: 45vh;
+                max-height: 350px;
+                min-height: 250px;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                object-fit: contain;
+            }
+
+            .hero-content {
+                bottom: 15%;
+                gap: 1rem;
+            }
+
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+
+            .hero-content p {
+                font-size: 0.85rem;
+            }
+
+            .cta-button {
+                padding: 12px 28px;
+                font-size: 0.95rem;
+            }
+
+            .hero-gradient {
+                top: 35%;
+                height: 50%;
+            }
+        }
+
+        /* Extra small devices (like iPhone 5/SE) */
+        @media (max-width: 320px) {
+            #spline-background {
+                height: 40vh;
+                max-height: 300px;
+                min-height: 220px;
+            }
+
+            .hero-content {
+                bottom: 10%;
+            }
+
+            .hero-content h1 {
+                font-size: 1.75rem;
+            }
+        }
+
+        /* Burger Menu with Moving Animation */
+        .burger-menu {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            cursor: pointer;
+            z-index: 1000;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .burger-menu:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .burger-menu span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: #ffffff;
+            margin: 5px 0;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                        opacity 0.3s ease,
+                        width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-origin: center;
+        }
+
+        /* Hover animation - lines stagger */
+        .burger-menu:hover span:nth-child(1) {
+            transform: translateX(3px);
+        }
+
+        .burger-menu:hover span:nth-child(2) {
+            width: 18px;
+        }
+
+        .burger-menu:hover span:nth-child(3) {
+            transform: translateX(3px);
+        }
+
+        /* Active state - X animation */
+        .burger-menu.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .burger-menu.active span:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+
+        .burger-menu.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        .burger-menu.active:hover span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px) scale(1.1);
+        }
+
+        .burger-menu.active:hover span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px) scale(1.1);
+        }
+
+        .side-menu {
+            position: fixed;
+            left: -250px;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: #000000;
+            border-right: 1px solid #2d2d2d;
+            transition: left 0.3s;
+            z-index: 999;
+            padding-top: 60px;
+        }
+
+        .side-menu.active {
+            left: 0;
+        }
+
+        .side-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #ffffff;
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 15px;
+            transition: background 0.2s, padding-left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .side-menu a:hover {
+            background: #1a1a1a;
+            padding-left: 30px;
+        }
+
+        .side-menu a .lucide-icon {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .side-menu a:hover .lucide-icon {
+            transform: scale(1.2);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 998;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Menu -->
+    <div class="side-menu" id="sideMenu">
+        <a href="/"><i data-lucide="home" class="lucide-icon"></i> Home</a>
+        <a href="/login"><i data-lucide="log-in" class="lucide-icon"></i> Login</a>
+        <a href="/register"><i data-lucide="user-plus" class="lucide-icon"></i> Register</a>
+        <a href="/about"><i data-lucide="info" class="lucide-icon"></i> About</a>
+    </div>
+    <div class="overlay" id="overlay"></div>
+    <div class="burger-menu" id="burgerMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+    <!-- Hero Section with Spline Background -->
+    <section class="hero-section">
+        <iframe id="spline-background" src='https://my.spline.design/aivoiceassistant80s-phYfdjvlnHIlKuv4KVX9urQ4/' frameborder='0' width='100%' height='100%'></iframe>
+        <div class="hero-gradient"></div>
+        <div class="hero-content">
+            <h1>Ask Chopper</h1>
+            <p>Your Intelligent Assistant, Powered by OpenAI</p>
+            <a href="/register" class="cta-button">Get Started <i data-lucide="arrow-right" class="lucide-icon"></i></a>
+        </div>
+    </section>
+
+    <!-- Second Section - Featured Image -->
+    <section class="second-section">
+        <h2>The Future is Now</h2>
+        <div class="asset-container">
+            <img src="" alt="Ask Chopper Preview" class="asset-image">
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section class="benefits-section">
+        <div class="benefits-container">
+            <h2>Why Choose Ask Chopper?</h2>
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i data-lucide="bot" class="lucide-icon"></i></div>
+                    <h3>AI Assistant Integration</h3>
+                    <p>Powered by OpenAI's advanced Assistant API, delivering intelligent, context-aware responses to all your queries.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i data-lucide="shield-check" class="lucide-icon"></i></div>
+                    <h3>Secure Authentication</h3>
+                    <p>Code-based login system ensures your conversations remain private and secure with session-based authentication.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i data-lucide="message-circle" class="lucide-icon"></i></div>
+                    <h3>Real-time Chat Interface</h3>
+                    <p>Responsive chat UI with typing indicators provides a seamless, interactive conversation experience.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i data-lucide="moon" class="lucide-icon"></i></div>
+                    <h3>Modern Dark Theme</h3>
+                    <p>Sleek, professional design that's easy on the eyes and provides an immersive experience.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i data-lucide="smartphone" class="lucide-icon"></i></div>
+                    <h3>Mobile Responsive</h3>
+                    <p>Works seamlessly across all devices - desktop, tablet, and mobile for on-the-go assistance.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i data-lucide="text" class="lucide-icon"></i></div>
+                    <h3>Rich Text Formatting</h3>
+                    <p>Support for paragraphs, bold, italic, code blocks, and lists makes responses clear and organized.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i data-lucide="zap" class="lucide-icon"></i></div>
+                    <h3>Fast & Lightweight</h3>
+                    <p>Minimal dependencies and optimized performance ensure quick response times and smooth interactions.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i data-lucide="brain" class="lucide-icon"></i></div>
+                    <h3>Context-Aware</h3>
+                    <p>Maintains conversation history for coherent, context-driven interactions throughout your session.</p>
+                </div>
+
+                <div class="benefit-card">
+                    <div class="benefit-icon"><i data-lucide="paperclip" class="lucide-icon"></i></div>
+                    <h3>File Attachments</h3>
+                    <p>Upload and share documents, images, and files directly in your conversations for enhanced collaboration.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="footer-text">© 2025 Ask Chopper. All rights reserved.</p>
+            <p class="footer-credits">Designed and Coded by <strong>Chopstix</strong> • Powered by <strong>NAVADA</strong></p>
+        </div>
+    </footer>
+
+    <script>
+        // Burger menu functionality
+        const burgerMenu = document.getElementById('burgerMenu');
+        const sideMenu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('overlay');
+
+        burgerMenu.addEventListener('click', () => {
+            burgerMenu.classList.toggle('active');
+            sideMenu.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            burgerMenu.classList.remove('active');
+            sideMenu.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
