@@ -58,7 +58,7 @@ vercel --prod
 |----------|-------|------|
 | `DATABASE_URL` | postgresql://neondb_owner:npg_... | ✅ |
 | `BLOB_READ_WRITE_TOKEN` | vercel_blob_rw_... | ⚠️ Need to create Blob storage |
-| `OPENAI_API_KEY` | sk-proj-bzB7... | ✅ |
+| `ANTHROPIC_API_KEY` | sk-proj-bzB7... | ✅ |
 | `OPENAI_ASSISTANT_ID` | asst_kxFV... | ✅ |
 | `OPENAI_VECTOR_STORE_ID` | vs_692e... | ✅ |
 | `SECRET_KEY` | cb5be0d2... | ✅ |
@@ -106,7 +106,7 @@ Vercel Serverless (Flask)
      ├─► Vercel Blob (Files)
      │   └─► Public CDN URLs
      │
-     └─► OpenAI API (AI)
+     └─► Anthropic API (AI)
          └─► GPT-4 + Assistants
 ```
 
@@ -118,7 +118,7 @@ Before sharing with 10 users:
 
 - [ ] Database persistence (create user, refresh, still there)
 - [ ] File upload works (audio, images, documents)
-- [ ] Chat responses work (OpenAI API)
+- [ ] Chat responses work (Anthropic API)
 - [ ] Sessions persist (login, refresh, still logged in)
 - [ ] Multiple concurrent users (5+ simultaneous)
 - [ ] No errors in logs (`vercel logs --prod`)
@@ -161,7 +161,7 @@ Before sharing with 10 users:
 | Vercel Hosting | Hobby | $0 |
 | Neon Database | Free | $0 |
 | Vercel Blob | Free (< 1GB) | $0 |
-| OpenAI API | Pay-as-you-go | ~$10-20 |
+| Anthropic API | Pay-as-you-go | ~$10-20 |
 | **Total** | | **~$10-20/month** |
 
 ---
@@ -225,7 +225,7 @@ Or via Vercel Dashboard → Deployments → Promote to Production
 ### External Resources
 - Vercel Docs: https://vercel.com/docs
 - Neon Docs: https://neon.tech/docs
-- OpenAI Docs: https://platform.openai.com/docs
+- Anthropic Docs: https://console.anthropic.com/docs
 
 ---
 

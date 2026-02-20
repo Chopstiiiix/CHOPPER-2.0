@@ -3,7 +3,7 @@
 ## Issues Fixed (Latest Update)
 
 ### 1. ✅ File Pointer Issue
-**Problem**: File stream exhausted after OpenAI upload
+**Problem**: File stream exhausted after Anthropic upload
 **Solution**: Added `file.seek(0)` to reset pointer before local save
 
 ### 2. ✅ Validation Error
@@ -20,7 +20,7 @@
 
 ✅ **OPENAI_ASSISTANT_ID**: `asst_kxFVifKEzOsV2cAYwSupMkyx`
 ✅ **OPENAI_VECTOR_STORE_ID**: `vs_692eef58ffb48191801aa6b8eece21c1`
-✅ **OPENAI_API_KEY**: Loaded correctly
+✅ **ANTHROPIC_API_KEY**: Loaded correctly
 ✅ **Flask Server**: Running on port 8000
 ✅ **Debug Mode**: Enabled with auto-reload
 
@@ -71,8 +71,8 @@ When you upload a document, watch your terminal for these logs:
 DEBUG: Processing document RAG request - Message: '...', Files: 1
 DEBUG: Processing 1 uploaded files
 DEBUG: Processing file: test_document.txt
-DEBUG: Uploading test_document.txt to OpenAI...
-DEBUG: OpenAI file created with ID: file-xxx
+DEBUG: Uploading test_document.txt to Anthropic...
+DEBUG: Anthropic file created with ID: file-xxx
 DEBUG: Adding file to vector store vs_692eef58...
 DEBUG: File added to vector store successfully
 DEBUG: Saving document to database...
@@ -97,34 +97,34 @@ grep OPENAI_VECTOR_STORE_ID .env
 **Solution**: Restart Flask server to reload .env
 
 ### Error: "Failed to create conversation thread"
-**Cause**: OpenAI API error or network issue
-**Check**: Terminal logs for OpenAI error details
-**Solution**: Verify API key and check OpenAI status
+**Cause**: Anthropic API error or network issue
+**Check**: Terminal logs for Anthropic error details
+**Solution**: Verify API key and check Anthropic status
 
 ### Error: "File rejected - not an allowed document type"
 **Cause**: Uploaded file type not supported
 **Solution**: Use supported formats (PDF, TXT, MD, code files)
 
-### Error: OpenAI API errors
+### Error: Anthropic API errors
 **Check terminal for**:
 - Rate limit errors → Wait and retry
 - Invalid API key → Check .env file
-- Invalid assistant ID → Verify in OpenAI dashboard
+- Invalid assistant ID → Verify in Anthropic dashboard
 - Vector store not found → Verify vector store ID
 
 ---
 
-## Verify OpenAI Configuration
+## Verify Anthropic Configuration
 
 ### Check Assistant Configuration
-1. Go to: https://platform.openai.com/assistants
+1. Go to: https://console.anthropic.com/assistants
 2. Find assistant: `asst_kxFVifKEzOsV2cAYwSupMkyx`
 3. Verify:
    - ✅ Tools include: `file_search`
    - ✅ Vector Store attached: `vs_692eef58ffb48191801aa6b8eece21c1`
 
 ### Check Vector Store
-1. Go to: https://platform.openai.com/storage
+1. Go to: https://console.anthropic.com/storage
 2. Find store: `vs_692eef58ffb48191801aa6b8eece21c1`
 3. After successful upload, you should see your files listed
 
@@ -148,7 +148,7 @@ npx prisma studio
 sqlite3 instance/ask_chopper.db
 
 # Check uploaded documents
-SELECT id, original_filename, openai_file_id, uploaded_at
+SELECT id, original_filename, chroma_doc_id, uploaded_at
 FROM document_uploads
 ORDER BY uploaded_at DESC
 LIMIT 5;
@@ -207,7 +207,7 @@ LIMIT 5;
 - **Assistant Response**: 5-30 seconds depending on:
   - Document size
   - Question complexity
-  - OpenAI API load
+  - Anthropic API load
 
 ---
 
@@ -233,7 +233,7 @@ python3 app.py
 
 ## Contact Information
 
-**OpenAI Configuration**:
+**Anthropic Configuration**:
 - Assistant ID: `asst_kxFVifKEzOsV2cAYwSupMkyx`
 - Vector Store ID: `vs_692eef58ffb48191801aa6b8eece21c1`
 - Endpoint: `/chat-with-document`

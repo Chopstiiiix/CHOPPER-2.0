@@ -92,13 +92,13 @@ echo "postgresql://user:password@host-pooler.region.aws.neon.tech/dbname?sslmode
 # 2. Blob Storage Token (from Step 3)
 echo "YOUR_BLOB_TOKEN_HERE" | vercel env add BLOB_READ_WRITE_TOKEN production
 
-# 3. OpenAI API Key
-echo "YOUR_OPENAI_API_KEY_HERE" | vercel env add OPENAI_API_KEY production
+# 3. Anthropic API Key
+echo "YOUR_ANTHROPIC_API_KEY_HERE" | vercel env add ANTHROPIC_API_KEY production
 
-# 4. OpenAI Assistant ID
+# 4. Anthropic Assistant ID
 echo "YOUR_ASSISTANT_ID_HERE" | vercel env add OPENAI_ASSISTANT_ID production
 
-# 5. OpenAI Vector Store ID
+# 5. Anthropic Vector Store ID
 echo "YOUR_VECTOR_STORE_ID_HERE" | vercel env add OPENAI_VECTOR_STORE_ID production
 
 # 6. Secret Key (generate with: python -c "import secrets; print(secrets.token_hex(32))")
@@ -121,7 +121,7 @@ vercel env ls
 You should see:
 - ✅ DATABASE_URL
 - ✅ BLOB_READ_WRITE_TOKEN
-- ✅ OPENAI_API_KEY
+- ✅ ANTHROPIC_API_KEY
 - ✅ OPENAI_ASSISTANT_ID
 - ✅ OPENAI_VECTOR_STORE_ID
 - ✅ SECRET_KEY
@@ -195,7 +195,7 @@ vercel logs --prod --follow
 Watch for:
 - ❌ Database connection errors
 - ❌ Blob storage upload errors
-- ❌ OpenAI API errors
+- ❌ Anthropic API errors
 - ❌ Session errors
 - ❌ 5xx server errors
 
@@ -304,22 +304,22 @@ Watch for:
 
 ---
 
-### Issue: "OpenAI API errors"
+### Issue: "Anthropic API errors"
 
 **Symptoms:**
 - Chat doesn't respond
-- "OpenAI API error" messages
+- "Anthropic API error" messages
 
 **Solutions:**
-1. Check OPENAI_API_KEY is valid
-2. Check API quota/billing: https://platform.openai.com/usage
+1. Check ANTHROPIC_API_KEY is valid
+2. Check API quota/billing: https://console.anthropic.com/usage
 3. Verify OPENAI_ASSISTANT_ID and OPENAI_VECTOR_STORE_ID are correct
 4. Test API key locally:
    ```python
-   from openai import OpenAI
-   client = OpenAI(api_key="your_key")
+   from anthropic import Anthropic
+   client = Anthropic(api_key="your_key")
    response = client.chat.completions.create(
-       model="gpt-4",
+       model="claude-3-5-haiku-latest",
        messages=[{"role": "user", "content": "test"}]
    )
    print(response)
@@ -416,7 +416,7 @@ Track these for 10-user test period:
 
 ### Phase 3: Scale Up (Week 3-4)
 - [ ] Expand to 50 users
-- [ ] Monitor costs (Blob, Neon, OpenAI)
+- [ ] Monitor costs (Blob, Neon, Anthropic)
 - [ ] Optimize file sizes
 - [ ] Add caching if needed
 - [ ] Consider CDN for static assets
@@ -435,10 +435,10 @@ Track these for 10-user test period:
 - Docs: https://neon.tech/docs
 - Support: https://neon.tech/docs/introduction/support
 
-### OpenAI
-- Dashboard: https://platform.openai.com/
-- API Status: https://status.openai.com/
-- Support: https://help.openai.com/
+### Anthropic
+- Dashboard: https://console.anthropic.com/
+- API Status: https://status.anthropic.com/
+- Support: https://support.anthropic.com/
 
 ---
 
@@ -457,7 +457,7 @@ Add your contacts here:
 - **Hosting:** Vercel (Serverless)
 - **Database:** Neon PostgreSQL (us-east-1)
 - **File Storage:** Vercel Blob
-- **AI:** OpenAI GPT-4 + Assistants API
+- **AI:** Anthropic GPT-4 + Assistants API
 
 ### Configuration
 - **Region:** us-east-1 (AWS)
@@ -469,7 +469,7 @@ Add your contacts here:
 - Vercel: $0 (Hobby plan)
 - Neon: $0 (Free tier, < 0.5GB)
 - Vercel Blob: $0 (< 1GB storage, < 10GB bandwidth)
-- OpenAI: ~$5-20/month (depends on usage)
+- Anthropic: ~$5-20/month (depends on usage)
 
 **Total:** ~$5-20/month
 

@@ -41,7 +41,7 @@ In your Vercel project settings, add:
 DATABASE_URL=<POSTGRES_PRISMA_URL from Vercel>
 
 # Your existing variables
-OPENAI_API_KEY=sk-proj-...
+ANTHROPIC_API_KEY=sk-proj-...
 OPENAI_ASSISTANT_ID=asst_kxFVifKEzOsV2cAYwSupMkyx
 OPENAI_VECTOR_STORE_ID=vs_692eef58ffb48191801aa6b8eece21c1
 SECRET_KEY=your_production_secret_key_here

@@ -330,8 +330,8 @@ def get_document_count(user_id: int, session_id: str = None) -> int:
     # Note: Chroma Cloud API doesn't have a direct count with filter
     # This is a workaround using query with high limit
     try:
-        from document_processor import generate_query_embedding
-        dummy_embedding = [0.0] * 1536  # Use zero embedding for count
+        from document_processor import EMBEDDING_DIMENSIONS
+        dummy_embedding = [0.0] * EMBEDDING_DIMENSIONS  # Use zero embedding for count
         results = query_documents(dummy_embedding, user_id, session_id, n_results=1000)
         return len(results.get("documents", []))
     except Exception:

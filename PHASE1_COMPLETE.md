@@ -2,7 +2,7 @@
 
 ## Summary
 
-Successfully implemented a complete Document RAG (Retrieval-Augmented Generation) system for Ask Chopper using OpenAI's Assistants API with Vector Store integration.
+Successfully implemented a complete Document RAG (Retrieval-Augmented Generation) system for Ask Chopper using Anthropic's Assistants API with Vector Store integration.
 
 ---
 
@@ -16,10 +16,10 @@ Successfully implemented a complete Document RAG (Retrieval-Augmented Generation
 **Features**:
 - Accepts file uploads with user messages
 - Validates document file types (PDF, TXT, MD, code files, etc.)
-- Uploads documents to OpenAI Files API
+- Uploads documents to Anthropic Files API
 - Adds files to Vector Store for semantic search
 - Creates/retrieves conversation threads per session
-- Runs OpenAI Assistant with file_search tool
+- Runs Anthropic Assistant with file_search tool
 - Extracts citations from assistant responses
 - Stores all metadata in database
 
@@ -56,13 +56,13 @@ Successfully implemented a complete Document RAG (Retrieval-Augmented Generation
    - Creates new thread if none exists
    - Maintains conversation continuity
 
-3. **`save_document_upload(user_id, session_id, file, openai_file_id)`**
+3. **`save_document_upload(user_id, session_id, file, chroma_doc_id)`**
    - Saves file to `/uploads/documents/`
    - Creates database record in `document_uploads` table
    - Tracks file metadata and vector store association
 
 4. **`process_assistant_response(messages_data)`**
-   - Extracts response text from OpenAI message
+   - Extracts response text from Anthropic message
    - Processes file_citation annotations
    - Returns formatted text and citation list
 
@@ -95,7 +95,7 @@ CREATE TABLE document_uploads (
     original_filename VARCHAR(255) NOT NULL,
     file_size INTEGER NOT NULL,
     mime_type VARCHAR(100),
-    openai_file_id VARCHAR(100) UNIQUE,
+    chroma_doc_id VARCHAR(100) UNIQUE,
     vector_store_id VARCHAR(100),
     file_path VARCHAR(500) NOT NULL,
     uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -107,8 +107,8 @@ CREATE TABLE document_uploads (
 
 #### Updated Table: `chat_messages`
 **New fields**:
-- `thread_id VARCHAR(100)` - OpenAI thread identifier
-- `run_id VARCHAR(100)` - OpenAI run identifier
+- `thread_id VARCHAR(100)` - Anthropic thread identifier
+- `run_id VARCHAR(100)` - Anthropic run identifier
 - `has_document_context BOOLEAN` - Indicates RAG usage
 
 ---
@@ -163,7 +163,7 @@ User Upload → Frontend Toggle → Endpoint Selection
                                         ↓
               ┌─────────────────────────┴─────────────────────────┐
               ↓                                                     ↓
-    OpenAI Files API Upload                           Save to Database
+    Anthropic Files API Upload                           Save to Database
     (purpose: 'assistants')                         (document_uploads)
               ↓
     Vector Store File Add
@@ -269,7 +269,7 @@ User Upload → Frontend Toggle → Endpoint Selection
 
 ### Environment Variables (.env)
 ```bash
-OPENAI_API_KEY=sk-proj-...
+ANTHROPIC_API_KEY=sk-proj-...
 OPENAI_ASSISTANT_ID=asst_kxFVifKEzOsV2cAYwSupMkyx
 OPENAI_VECTOR_STORE_ID=vs_692eef58ffb48191801aa6b8eece21c1
 DATABASE_URL="file:../ask_chopper.db"
@@ -318,7 +318,7 @@ SECRET_KEY=your_secret_key
 - **Database Save**: < 500ms
 
 ### Scalability Considerations
-- Vector Store capacity: Depends on OpenAI plan
+- Vector Store capacity: Depends on Anthropic plan
 - Database growth: Monitor document_uploads table size
 - Thread management: Clean up old threads periodically
 - File storage: Implement cleanup for expired documents
@@ -332,7 +332,7 @@ SECRET_KEY=your_secret_key
    - Requires re-upload for expired documents
 
 2. **File Size Limits**
-   - Subject to OpenAI API limits
+   - Subject to Anthropic API limits
    - Frontend validation may need adjustment
 
 3. **Concurrent Uploads**
@@ -432,7 +432,7 @@ SECRET_KEY=your_secret_key
 ## Git History
 
 ### Commits
-1. **5a6c761** - "Implement Phase 1 of Document RAG system with OpenAI Vector Store"
+1. **5a6c761** - "Implement Phase 1 of Document RAG system with Anthropic Vector Store"
    - Helper functions and models
 
 2. **e9f837c** - "Complete Phase 1 Document RAG implementation"
@@ -487,7 +487,7 @@ Before deploying to production:
 ### For Issues
 1. Check TEST_PLAN.md troubleshooting section
 2. Review Flask logs
-3. Check OpenAI API status
+3. Check Anthropic API status
 4. Verify environment variables
 5. Inspect database records
 
@@ -499,7 +499,7 @@ Before deploying to production:
 
 ## Conclusion
 
-Phase 1 Document RAG implementation is **complete and production-ready** pending user acceptance testing. The system successfully integrates OpenAI's Assistants API with Vector Store to provide intelligent document-based question answering with automatic citation extraction.
+Phase 1 Document RAG implementation is **complete and production-ready** pending user acceptance testing. The system successfully integrates Anthropic's Assistants API with Vector Store to provide intelligent document-based question answering with automatic citation extraction.
 
 **Total Lines of Code**: ~500+ lines added/modified
 **Total Time**: Efficient implementation with comprehensive planning

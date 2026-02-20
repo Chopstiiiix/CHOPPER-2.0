@@ -9,18 +9,20 @@ import os
 import uuid
 import io
 from typing import Tuple, List, Optional
-from openai import OpenAI
+from sentence_transformers import SentenceTransformer
 
-def _get_openai_client():
-    """Get fresh OpenAI client for serverless compatibility."""
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        raise ValueError("OPENAI_API_KEY not set")
-    return OpenAI(api_key=api_key)
+# Embedding model configuration (local model, no external API key required)
+EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+EMBEDDING_DIMENSIONS = 384
 
-# Embedding model configuration
-EMBEDDING_MODEL = "text-embedding-3-small"
-EMBEDDING_DIMENSIONS = 1536
+_embedding_model = None
+
+def _get_embedding_model():
+    """Get or create local embedding model."""
+    global _embedding_model
+    if _embedding_model is None:
+        _embedding_model = SentenceTransformer(EMBEDDING_MODEL)
+    return _embedding_model
 
 # Chunking configuration
 DEFAULT_CHUNK_SIZE = 1000  # characters - larger chunks for better context
@@ -280,7 +282,7 @@ def chunk_text(
 
 def generate_embeddings(texts: List[str]) -> List[List[float]]:
     """
-    Generate embeddings for a list of texts using OpenAI.
+    Generate embeddings for a list of texts using a local embedding model.
 
     Args:
         texts: List of text strings to embed
@@ -291,16 +293,9 @@ def generate_embeddings(texts: List[str]) -> List[List[float]]:
     if not texts:
         return []
 
-    # OpenAI API can handle batch requests
-    response = _get_openai_client().embeddings.create(
-        model=EMBEDDING_MODEL,
-        input=texts
-    )
-
-    # Extract embeddings in order
-    embeddings = [item.embedding for item in response.data]
-
-    return embeddings
+    embedding_model = _get_embedding_model()
+    vectors = embedding_model.encode(texts, normalize_embeddings=True).tolist()
+    return vectors
 
 
 def generate_query_embedding(query: str) -> List[float]:
@@ -313,12 +308,9 @@ def generate_query_embedding(query: str) -> List[float]:
     Returns:
         Embedding vector
     """
-    response = _get_openai_client().embeddings.create(
-        model=EMBEDDING_MODEL,
-        input=query
-    )
-
-    return response.data[0].embedding
+    embedding_model = _get_embedding_model()
+    vector = embedding_model.encode([query], normalize_embeddings=True).tolist()
+    return vector[0]
 
 
 def process_document(
@@ -381,7 +373,7 @@ def estimate_tokens(text: str) -> int:
     """
     try:
         import tiktoken
-        encoding = tiktoken.encoding_for_model("gpt-4")
+        encoding = tiktoken.get_encoding("cl100k_base")
         return len(encoding.encode(text))
     except Exception:
         # Fallback: rough estimate (1 token ~ 4 characters)

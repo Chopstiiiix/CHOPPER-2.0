@@ -382,7 +382,7 @@ Upgrade to Pro plan if:
 |----------|----------|---------|--------------|
 | `BLOB_READ_WRITE_TOKEN` | Yes (prod) | Vercel Blob access token | Vercel dashboard |
 | `DATABASE_URL` | Yes | PostgreSQL connection | Already set |
-| `OPENAI_API_KEY` | Yes | OpenAI API access | Already set |
+| `ANTHROPIC_API_KEY` | Yes | Anthropic API access | Already set |
 | `SECRET_KEY` | Yes | Session encryption | Already set |
 
 ---

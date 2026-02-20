@@ -46,7 +46,7 @@ Last assessed: 2025-12-08
 ### 4. Environment Variables Setup
 **Required environment variables in Vercel:**
 - [ ] `SECRET_KEY` - Strong random key
-- [ ] `OPENAI_API_KEY` - Your OpenAI API key
+- [ ] `ANTHROPIC_API_KEY` - Your Anthropic API key
 - [ ] `OPENAI_ASSISTANT_ID` - Your assistant ID
 - [ ] `OPENAI_VECTOR_STORE_ID` - Your vector store ID
 - [ ] `DATABASE_URL` - Production database connection string
@@ -90,7 +90,7 @@ Last assessed: 2025-12-08
   - [ ] `user_profile` endpoint (line 703)
   - [ ] `downloads_list` endpoint (line 732)
 - [ ] Add connection pooling configuration
-- [ ] Consider async OpenAI API calls for better concurrency
+- [ ] Consider async Anthropic API calls for better concurrency
 
 ---
 
@@ -112,7 +112,7 @@ Last assessed: 2025-12-08
 - [ ] Write basic integration tests
 - [ ] Test authentication flow
 - [ ] Test file uploads (once migrated to cloud storage)
-- [ ] Test OpenAI API integration
+- [ ] Test Anthropic API integration
 - [ ] Run load test with 10 concurrent users
 - [ ] Test on actual Vercel deployment
 
@@ -128,7 +128,7 @@ Last assessed: 2025-12-08
 ---
 
 ### 11. User Experience
-- [ ] Add loading indicators for slow operations (OpenAI calls)
+- [ ] Add loading indicators for slow operations (Anthropic calls)
 - [ ] Add timeout handling for long-running operations
 - [ ] Add user-friendly error messages
 - [ ] Test on mobile devices
@@ -149,7 +149,7 @@ Add rate limiting to prevent abuse:
 
 ### 13. Monitoring & Analytics
 - [ ] Add Vercel Analytics
-- [ ] Track OpenAI API usage
+- [ ] Track Anthropic API usage
 - [ ] Monitor database query performance
 - [ ] Track user activity metrics
 - [ ] Set up alerts for errors
@@ -205,7 +205,7 @@ After deploying, monitor these metrics for the first week:
 - [ ] Error rate (should be <1%)
 - [ ] Response times (should be <2s for most endpoints)
 - [ ] Database connection errors
-- [ ] OpenAI API errors
+- [ ] Anthropic API errors
 - [ ] File upload success rate
 - [ ] User session issues
 - [ ] Memory usage
@@ -232,7 +232,7 @@ After deploying, monitor these metrics for the first week:
 ## Questions to Answer Before Production
 
 1. What is your Vercel plan? (Hobby has 10s timeout, Pro has 60s)
-2. What is your OpenAI API rate limit?
+2. What is your Anthropic API rate limit?
 3. Do you have database backup strategy?
 4. Do you have a budget for cloud storage?
 5. Do you have monitoring tools access?

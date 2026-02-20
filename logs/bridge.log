@@ -1,0 +1,1 @@
+{"ts": "2026-02-20T13:44:07.159998+00:00", "source": "system", "event": "bridge_log_configured", "status": "ok", "session_id": null, "user_id": null, "chat_id": null, "model": null, "message": null, "detail": "bridge logging enabled", "extra": {}}

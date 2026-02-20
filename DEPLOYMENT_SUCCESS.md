@@ -20,7 +20,7 @@
 - **Hosting:** Vercel Serverless
 - **Database:** Neon PostgreSQL (us-east-1)
 - **File Storage:** Vercel Blob (1GB free)
-- **AI:** OpenAI GPT-4 + Assistants API
+- **AI:** Anthropic GPT-4 + Assistants API
 
 ### Features ✅
 - User registration & authentication
@@ -40,7 +40,7 @@ All critical variables configured:
 
 - ✅ `DATABASE_URL` - Neon PostgreSQL
 - ✅ `BLOB_READ_WRITE_TOKEN` - Vercel Blob
-- ✅ `OPENAI_API_KEY` - OpenAI API
+- ✅ `ANTHROPIC_API_KEY` - Anthropic API
 - ✅ `OPENAI_ASSISTANT_ID` - Assistant for RAG
 - ✅ `OPENAI_VECTOR_STORE_ID` - Vector store
 - ✅ `SECRET_KEY` - Strong session key
@@ -141,7 +141,7 @@ Thanks for helping test! 🙏
 
 ### For 10 Users
 These limits should be fine! Monitor usage:
-- **Estimated costs:** $10-20/month (mostly OpenAI)
+- **Estimated costs:** $10-20/month (mostly Anthropic)
 - **Storage:** Should stay well under 1GB
 - **Bandwidth:** Should stay under 10GB
 
@@ -165,8 +165,8 @@ vercel logs <url>  # Check what's failing
 - Check Blob storage quota
 
 **Chat Not Working:**
-- Verify OpenAI API key is valid
-- Check API quota: https://platform.openai.com/usage
+- Verify Anthropic API key is valid
+- Check API quota: https://console.anthropic.com/usage
 
 ### Rollback
 ```bash
@@ -256,7 +256,7 @@ Before inviting users:
 ### External
 - Vercel Docs: https://vercel.com/docs
 - Neon Docs: https://neon.tech/docs
-- OpenAI: https://platform.openai.com/
+- Anthropic: https://console.anthropic.com/
 
 ---
 

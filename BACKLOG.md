@@ -178,7 +178,7 @@ Migrate application infrastructure to support production deployment on Vercel wi
 - [ ] Set up alert rules for critical errors
 - [ ] Remove /tmp file logging (app.py lines 292-296)
 - [ ] Add structured logging with JSON format
-- [ ] Log OpenAI API performance metrics
+- [ ] Log Anthropic API performance metrics
 - [ ] Create logging utility module
 
 **Files to Modify:**
@@ -198,14 +198,14 @@ Migrate application infrastructure to support production deployment on Vercel wi
 **Acceptance Criteria:**
 - [ ] /health endpoint returns service status
 - [ ] Database connectivity check
-- [ ] OpenAI API connectivity check
+- [ ] Anthropic API connectivity check
 - [ ] Uptime monitoring configured
 - [ ] Response time tracking
 
 **Technical Tasks:**
 - [ ] Create /health endpoint
 - [ ] Check database connection health
-- [ ] Check OpenAI API availability
+- [ ] Check Anthropic API availability
 - [ ] Return JSON status response
 - [ ] Set up Vercel Analytics (built-in)
 - [ ] Configure external uptime monitor (UptimeRobot)
@@ -288,13 +288,13 @@ Migrate application infrastructure to support production deployment on Vercel wi
 
 ---
 
-**US-PROD-008: OpenAI API Performance Optimization**
+**US-PROD-008: Anthropic API Performance Optimization**
 - **As a** user
 - **I want** faster AI response times
 - **So that** I have a smooth chat experience
 
 **Problem:**
-- Synchronous OpenAI API calls block request thread (1-3s)
+- Synchronous Anthropic API calls block request thread (1-3s)
 - Document RAG waits up to 30 seconds
 - May timeout on Vercel (10s Hobby, 60s Pro)
 
@@ -305,13 +305,13 @@ Migrate application infrastructure to support production deployment on Vercel wi
 - [ ] Loading states implemented
 
 **Technical Tasks:**
-- [ ] Consider async/await for OpenAI calls
+- [ ] Consider async/await for Anthropic calls
 - [ ] Add streaming responses for chat
 - [ ] Implement timeout handling
 - [ ] Add loading indicators in frontend
 - [ ] Consider webhook callbacks for long operations
 - [ ] Test with 5 concurrent chat requests
-- [ ] Monitor OpenAI API latency
+- [ ] Monitor Anthropic API latency
 
 **Files to Modify:**
 - `app.py`: Chat endpoints (lines 754-997)
@@ -338,7 +338,7 @@ Migrate application infrastructure to support production deployment on Vercel wi
 - [ ] Set all variables in Vercel dashboard
 - [ ] Add .env.example template
 - [ ] Remove .env from git (already in .gitignore)
-- [ ] Verify OPENAI_API_KEY not exposed
+- [ ] Verify ANTHROPIC_API_KEY not exposed
 - [ ] Add environment validation at startup
 
 **Files to Modify:**
@@ -465,7 +465,7 @@ Migrate application infrastructure to support production deployment on Vercel wi
 - [ ] Link memory with user_id from users table
 - [ ] Implement preference extraction from conversations
 - [ ] Create memory retrieval functions
-- [ ] Add memory context to OpenAI chat prompts
+- [ ] Add memory context to Anthropic chat prompts
 
 **US-002: Conversation History Context**
 - **As a** user
@@ -524,7 +524,7 @@ Migrate application infrastructure to support production deployment on Vercel wi
 - Existing user authentication system
 - chat_messages table
 - user_activity table
-- OpenAI integration
+- Anthropic integration
 
 **Success Metrics:**
 - 50% reduction in repeated questions
@@ -916,7 +916,7 @@ Replace deprecated datetime.utcnow() with timezone-aware datetime.now(datetime.U
 │  └─────────────────────────────────────────┘ │
 │                  │                              │
 │  ┌───────────────▼───────────────────────────┐ │
-│  │    OpenAI Chat Completions API            │ │
+│  │    Anthropic Chat Completions API            │ │
 │  │    - Receives enriched context            │ │
 │  │    - Generates intelligent responses      │ │
 │  └───────────────────────────────────────────┘ │

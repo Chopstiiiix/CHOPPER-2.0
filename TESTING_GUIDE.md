@@ -155,7 +155,7 @@ Copy this URL and test each item:
 **✅ PASS if:** Chat works, AI responds
 **❌ FAIL if:**
 - Timeout error
-- "OpenAI API error"
+- "Anthropic API error"
 - No response after 10 seconds
 
 ---
@@ -262,13 +262,13 @@ Visit Vercel Dashboard → Storage → Verify Blob store exists
 
 ### If Chat Doesn't Work
 **Check:**
-- OPENAI_API_KEY is valid
+- ANTHROPIC_API_KEY is valid
 - API has credit/quota
 - Not hitting rate limits
 
 **Solution:**
-- Check OpenAI dashboard: https://platform.openai.com/usage
-- Verify API key: https://platform.openai.com/api-keys
+- Check Anthropic dashboard: https://console.anthropic.com/usage
+- Verify API key: https://console.anthropic.com/api-keys
 
 ---
 

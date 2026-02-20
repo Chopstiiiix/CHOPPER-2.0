@@ -57,6 +57,7 @@ login_cookies.txt
 *_cookies.txt
 .vercel
 .env*.local
+.telegram_model_prefs.json
 
 # Scripts with secrets (do not commit)
 set_vercel_env.sh

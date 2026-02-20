@@ -31,13 +31,13 @@ Run these commands one by one:
 # 1. Database URL (Neon PostgreSQL)
 echo "postgresql://user:password@host-pooler.region.aws.neon.tech/dbname?sslmode=require" | vercel env add DATABASE_URL production
 
-# 2. OpenAI API Key
-echo "YOUR_OPENAI_API_KEY_HERE" | vercel env add OPENAI_API_KEY production
+# 2. Anthropic API Key
+echo "YOUR_ANTHROPIC_API_KEY_HERE" | vercel env add ANTHROPIC_API_KEY production
 
-# 3. OpenAI Assistant ID
+# 3. Anthropic Assistant ID
 echo "YOUR_ASSISTANT_ID_HERE" | vercel env add OPENAI_ASSISTANT_ID production
 
-# 4. OpenAI Vector Store ID
+# 4. Anthropic Vector Store ID
 echo "YOUR_VECTOR_STORE_ID_HERE" | vercel env add OPENAI_VECTOR_STORE_ID production
 
 # 5. Secret Key (generate with: python -c "import secrets; print(secrets.token_hex(32))")
@@ -68,7 +68,7 @@ vercel env ls
 
 You should see:
 - DATABASE_URL
-- OPENAI_API_KEY
+- ANTHROPIC_API_KEY
 - OPENAI_ASSISTANT_ID
 - OPENAI_VECTOR_STORE_ID
 - SECRET_KEY
@@ -183,7 +183,7 @@ After deploying, verify:
 - [ ] User login works
 - [ ] Sessions persist across page refreshes
 - [ ] Database queries work (check user profile, packs, etc.)
-- [ ] OpenAI chat responses work
+- [ ] Anthropic chat responses work
 - [ ] No errors in Vercel logs: `vercel logs --prod`
 
 ---
@@ -193,8 +193,8 @@ After deploying, verify:
 | Variable | Value | Purpose |
 |----------|-------|---------|
 | DATABASE_URL | postgresql://neondb_owner:npg_... | Neon PostgreSQL connection |
-| OPENAI_API_KEY | sk-proj-bzB7... | OpenAI API authentication |
-| OPENAI_ASSISTANT_ID | asst_kxFV... | OpenAI Assistant for RAG |
+| ANTHROPIC_API_KEY | sk-proj-bzB7... | Anthropic API authentication |
+| OPENAI_ASSISTANT_ID | asst_kxFV... | Anthropic Assistant for RAG |
 | OPENAI_VECTOR_STORE_ID | vs_692e... | Vector store for documents |
 | SECRET_KEY | cb5be0d2... | Flask session encryption |
 | VERCEL | true | Flag for Vercel environment |

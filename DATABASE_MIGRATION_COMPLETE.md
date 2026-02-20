@@ -126,7 +126,7 @@ Go to your Vercel project settings and add these environment variables:
 **Required:**
 ```
 DATABASE_URL=postgresql://neondb_owner:npg_GPKeHN7p8mBg@ep-shy-bush-a4b1clf2-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
-OPENAI_API_KEY=<your_key>
+ANTHROPIC_API_KEY=<your_key>
 OPENAI_ASSISTANT_ID=<your_id>
 OPENAI_VECTOR_STORE_ID=<your_id>
 SECRET_KEY=<generate_new_strong_key>

@@ -43,7 +43,7 @@ In Vercel project settings → **Environment Variables**, add:
 
 ```
 DATABASE_URL = <copy POSTGRES_PRISMA_URL value from Vercel>
-OPENAI_API_KEY = <your OpenAI API key from .env>
+ANTHROPIC_API_KEY = <your Anthropic API key from .env>
 OPENAI_ASSISTANT_ID = asst_kxFVifKEzOsV2cAYwSupMkyx
 OPENAI_VECTOR_STORE_ID = vs_692eef58ffb48191801aa6b8eece21c1
 SECRET_KEY = <generate a new random string for production>

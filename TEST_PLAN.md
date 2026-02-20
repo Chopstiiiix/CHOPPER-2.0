@@ -4,7 +4,7 @@
 
 ### Test Environment
 - URL: http://localhost:8000
-- Backend: Flask with OpenAI Assistants API
+- Backend: Flask with Anthropic Assistants API
 - Vector Store ID: vs_692eef58ffb48191801aa6b8eece21c1
 - Assistant ID: asst_kxFVifKEzOsV2cAYwSupMkyx
 
@@ -174,7 +174,7 @@
 **Expected Result**:
 - New record in document_uploads with:
   - Correct filename
-  - OpenAI file_id
+  - Anthropic file_id
   - Vector store ID
   - Upload timestamp
 - Chat messages include:
@@ -187,7 +187,7 @@
 ## Performance Metrics
 
 Track the following for each test:
-- **Upload Time**: Time to upload document to OpenAI
+- **Upload Time**: Time to upload document to Anthropic
 - **Response Time**: Time from send to response
 - **Accuracy**: Correctness of information from document
 - **Citation Accuracy**: Correct source attribution
@@ -203,7 +203,7 @@ Track the following for each test:
 ## Known Limitations
 
 1. **Document Expiry**: Vector Store expires after 30 days of inactivity
-2. **File Size**: OpenAI has limits on file size (check current limits)
+2. **File Size**: Anthropic has limits on file size (check current limits)
 3. **Supported Formats**: Limited to allowed_document_file() types
 4. **Concurrent Uploads**: Multiple simultaneous uploads may impact performance
 
@@ -222,7 +222,7 @@ Track the following for each test:
 - Restart Flask server after .env changes
 
 ### Issue: Slow responses
-- Check: OpenAI API status
+- Check: Anthropic API status
 - Check: Document size
 - Check: Network connection
 - Review: Assistant run polling interval

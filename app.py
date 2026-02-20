@@ -5,15 +5,15 @@ import mimetypes
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, send_from_directory
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from openai import OpenAI
+from anthropic import Anthropic
 from dotenv import load_dotenv
 from functools import wraps
 from werkzeug.utils import secure_filename
 from PIL import Image
 from models import db, ChatMessage, MessageAttachment, User, Feedback, UserProfile, DocumentUpload, AdminMessage, SupportChat
 import blob_storage
+from bridge_log import log_bridge_event, read_bridge_logs
 from chroma_client import (
     get_collection, add_document_chunks, query_documents,
     delete_document, delete_user_documents
@@ -97,19 +97,36 @@ def db_commit_with_retry(max_retries=3):
             raise
     return False
 
-def get_openai_client():
-    """Get OpenAI client - creates fresh instance for serverless compatibility."""
-    api_key = os.environ.get("OPENAI_API_KEY")
+def get_anthropic_client():
+    """Get Anthropic client - creates fresh instance for serverless compatibility."""
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
-        raise ValueError("OPENAI_API_KEY not set")
-    return OpenAI(api_key=api_key)
+        raise ValueError("ANTHROPIC_API_KEY not set")
+    return Anthropic(api_key=api_key)
 
-# Keep for backward compatibility but prefer get_openai_client() in functions
-client = None
-try:
-    client = get_openai_client()
-except:
-    pass  # Will be created on demand
+def get_haiku_model():
+    return os.environ.get("ANTHROPIC_MODEL_HAIKU", "claude-3-haiku-20240307")
+
+def get_opus_model():
+    return os.environ.get("ANTHROPIC_MODEL_OPUS", "claude-opus-4-1-20250805")
+
+def get_default_model():
+    return os.environ.get("ANTHROPIC_MODEL", get_haiku_model())
+
+def get_active_model():
+    """Resolve active chat model for current session."""
+    model_choice = session.get("chat_model", "haiku")
+    if model_choice == "opus":
+        return get_opus_model()
+    return get_default_model()
+
+def extract_anthropic_text(response):
+    """Extract combined text from Anthropic response blocks."""
+    text_parts = []
+    for block in response.content:
+        if getattr(block, "type", None) == "text":
+            text_parts.append(block.text)
+    return "".join(text_parts).strip()
 
 # Verification code
 VERIFICATION_CODE = "1234567890"
@@ -240,22 +257,8 @@ def allowed_document_file(filename):
     return ext in ALLOWED_DOC_EXTENSIONS
 
 def get_or_create_thread(session_id):
-    """Get existing thread ID or create new one for session"""
-    try:
-        # Check database for existing thread
-        last_message = ChatMessage.query.filter_by(
-            session_id=session_id
-        ).order_by(ChatMessage.created_at.desc()).first()
-
-        if last_message and last_message.thread_id:
-            return last_message.thread_id
-
-        # Create new thread
-        thread = client.beta.threads.create()
-        return thread.id
-    except Exception as e:
-        print(f"Error getting/creating thread: {e}")
-        return None
+    """Legacy compatibility shim (threads are not used with Anthropic messages API)."""
+    return None
 
 def save_document_upload(user_id, session_id, file, chroma_doc_id, chunk_count):
     """Save document upload record to database and Vercel Blob storage"""
@@ -345,39 +348,8 @@ def save_document_upload_with_content(user_id, session_id, original_filename, co
         return None
 
 def process_assistant_response(messages_data):
-    """Process assistant response and handle citations"""
-    try:
-        assistant_message = messages_data.data[0]
-        content = assistant_message.content[0].text
-        response_text = content.value
-
-        # Handle citations
-        annotations = content.annotations
-        citations = []
-
-        for annotation in annotations:
-            if annotation.type == 'file_citation':
-                citation = annotation.file_citation
-                try:
-                    cited_file = client.files.retrieve(citation.file_id)
-                    file_name = cited_file.filename
-                    # Replace annotation with reference
-                    response_text = response_text.replace(
-                        annotation.text,
-                        f" [{file_name}]"
-                    )
-                    citations.append({
-                        'file_id': citation.file_id,
-                        'file_name': file_name,
-                        'quote': citation.quote if hasattr(citation, 'quote') else None
-                    })
-                except Exception as e:
-                    print(f"Error retrieving cited file: {e}")
-
-        return response_text, citations
-    except Exception as e:
-        print(f"Error processing assistant response: {e}")
-        return None, []
+    """Legacy compatibility shim."""
+    return None, []
 
 # =============================================================================
 
@@ -398,21 +370,17 @@ def admin_required(f):
         if not session.get('authenticated'):
             return redirect(url_for('login'))
         if not session.get('is_admin'):
-            return redirect(url_for('app_home'))
+            return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated_function
 
 def generate_response(prompt, conversation_history=None):
-    """Generate a response using OpenAI Chat Completions API."""
-    if not os.environ.get("OPENAI_API_KEY"):
-        return "OPENAI_API_KEY environment variable not set. Please check your .env file."
+    """Generate a response using Anthropic Messages API."""
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        return "ANTHROPIC_API_KEY environment variable not set. Please check your .env file."
 
     try:
-        # Build conversation messages
-        messages = [
-            {
-                "role": "system",
-                "content": """You are Chopper, an AI assistant created for Ask Chopper. You help users with various tasks. Always be helpful, accurate, and concise.
+        system_prompt = """You are Chopper, an AI assistant created for Ask Chopper. You help users with various tasks. Always be helpful, accurate, and concise.
 
 IMPORTANT: You have special knowledge about Chopstix, the music producer who created this app. When users ask about Chopstix, use this information:
 
@@ -439,8 +407,9 @@ Notable Productions: Fire of Zamani, African Giant, Love Damini, Outside (Burna 
 Musical Influences: Timbaland, DJ Premier
 
 For more information: https://en.wikipedia.org/wiki/Chopstix_(music_producer)"""
-            }
-        ]
+
+        # Build conversation messages (Anthropic format)
+        messages = []
 
         # Add conversation history if available
         if conversation_history:
@@ -451,23 +420,51 @@ For more information: https://en.wikipedia.org/wiki/Chopstix_(music_producer)"""
 
         # Log API call details
         import sys
-        log_message = f"🚀 Making OpenAI API call... Messages: {len(messages)}"
+        model_name = get_active_model()
+        log_message = f"🚀 Making Anthropic API call... Messages: {len(messages)}, Model: {model_name}"
         print(log_message, file=sys.stdout, flush=True)
+        log_bridge_event(
+            source="app",
+            event="anthropic_request",
+            session_id=session.get("session_id"),
+            user_id=session.get("user_id"),
+            model=model_name,
+            message=prompt,
+            extra={"history_count": len(conversation_history or [])}
+        )
 
-        # Get fresh OpenAI client for serverless compatibility
-        openai_client = get_openai_client()
+        # Get fresh Anthropic client for serverless compatibility
+        anthropic_client = get_anthropic_client()
 
-        # Generate response using Chat Completions API
-        response = openai_client.chat.completions.create(
-            model="gpt-4",
+        # Generate response using Anthropic Messages API
+        response = anthropic_client.messages.create(
+            model=model_name,
+            system=system_prompt,
             messages=messages,
             temperature=0.7,
             max_tokens=1500
         )
 
         # Log successful API response
-        success_message = f"✅ OpenAI API Success! Request ID: {response.id}, Model: {response.model}, Tokens: {response.usage.total_tokens}"
+        in_tokens = getattr(getattr(response, "usage", None), "input_tokens", "n/a")
+        out_tokens = getattr(getattr(response, "usage", None), "output_tokens", "n/a")
+        success_message = (
+            f"✅ Anthropic API Success! Request ID: {response.id}, "
+            f"Model: {response.model}, Input Tokens: {in_tokens}, Output Tokens: {out_tokens}"
+        )
         print(success_message, file=sys.stdout, flush=True)
+        log_bridge_event(
+            source="app",
+            event="anthropic_response",
+            session_id=session.get("session_id"),
+            user_id=session.get("user_id"),
+            model=response.model,
+            detail=response.id,
+            extra={
+                "input_tokens": in_tokens,
+                "output_tokens": out_tokens
+            }
+        )
 
         # Also log to file for persistent tracking (skip on serverless)
         try:
@@ -478,16 +475,26 @@ For more information: https://en.wikipedia.org/wiki/Chopstix_(music_producer)"""
         except:
             pass  # Ignore file logging errors in serverless environment
 
-        response_text = response.choices[0].message.content
+        response_text = extract_anthropic_text(response)
         # Prepend Chopper signature to response
         return f"[Chopper]: {response_text}"
     except Exception as e:
-        print(f"❌ OpenAI API Error: {str(e)}")
+        print(f"❌ Anthropic API Error: {str(e)}")
+        log_bridge_event(
+            source="app",
+            event="anthropic_error",
+            status="error",
+            session_id=session.get("session_id"),
+            user_id=session.get("user_id"),
+            model=get_active_model(),
+            message=prompt,
+            detail=str(e)
+        )
         return f"An error occurred: {str(e)}"
 
 @app.route('/')
 def landing():
-    return render_template('landing.html')
+    return redirect(url_for('index'))
 
 @app.route('/player-test')
 def player_test():
@@ -899,11 +906,28 @@ def chat():
     files = request.files.getlist('files')
 
     if not user_message and not files:
+        log_bridge_event(
+            source="app",
+            event="chat_request_rejected",
+            status="error",
+            session_id=session.get('session_id'),
+            user_id=session.get('user_id'),
+            detail="No message or files provided"
+        )
         return jsonify({'error': 'No message or files provided'}), 400
 
     try:
         # Create user message record
         session_id = session.get('session_id', 'default')
+        log_bridge_event(
+            source="app",
+            event="chat_request",
+            session_id=session_id,
+            user_id=session.get('user_id'),
+            model=get_active_model(),
+            message=user_message or "[Attachment only]",
+            extra={"file_count": len(files)}
+        )
 
         user_msg = ChatMessage(
             session_id=session_id,
@@ -971,6 +995,18 @@ def chat():
             print(f"WARNING: Failed to save assistant message to DB: {commit_error}")
             # Continue anyway - the response should still be returned to user
 
+        log_bridge_event(
+            source="app",
+            event="chat_response",
+            session_id=session_id,
+            user_id=session.get('user_id'),
+            model=get_active_model(),
+            detail=ai_response,
+            extra={
+                "duration_ms": int((time.time() - start_time) * 1000),
+                "has_attachments": len(files) > 0
+            }
+        )
         return jsonify({'response': ai_response})
 
     except Exception as e:
@@ -979,6 +1015,16 @@ def chat():
         error_details = traceback.format_exc()
         print(f"Error in chat endpoint: {e}")
         print(f"Full traceback: {error_details}")
+        log_bridge_event(
+            source="app",
+            event="chat_error",
+            status="error",
+            session_id=session.get('session_id'),
+            user_id=session.get('user_id'),
+            model=get_active_model(),
+            message=user_message,
+            detail=str(e)
+        )
         # Return detailed error for debugging
         return jsonify({'error': f'Error: {str(e)}'}), 500
 
@@ -995,6 +1041,14 @@ def chat_with_document():
 
     # Require either message or files
     if not user_message and not uploaded_files:
+        log_bridge_event(
+            source="app",
+            event="chat_with_document_rejected",
+            status="error",
+            session_id=session_id,
+            user_id=user_id,
+            detail="No message or files provided"
+        )
         return jsonify({'error': 'Please provide a message or upload documents'}), 400
 
     # If no message but files are uploaded, create default message
@@ -1003,6 +1057,15 @@ def chat_with_document():
 
     print(f"DEBUG: Processing document RAG request - Message: '{user_message[:50]}...', Files: {len(uploaded_files)}")
     print(f"DEBUG: user_id={user_id}, session_id={session_id}")
+    log_bridge_event(
+        source="app",
+        event="chat_with_document_request",
+        session_id=session_id,
+        user_id=user_id,
+        model=get_active_model(),
+        message=user_message,
+        extra={"uploaded_file_count": len(uploaded_files)}
+    )
 
     try:
         # Process uploaded documents
@@ -1161,11 +1224,8 @@ User's message: {user_message}"""
                     "content": clean_content
                 })
 
-        # Generate response using Chat Completions API
-        messages = [
-            {
-                "role": "system",
-                "content": """You are Chopper, an AI assistant that helps users understand, analyze, and explain their documents.
+        # Generate response using Anthropic Messages API
+        system_prompt = """You are Chopper, an AI assistant that helps users understand, analyze, and explain their documents.
 
 Your capabilities with documents:
 - Summarize document contents clearly and comprehensively
@@ -1181,21 +1241,22 @@ Guidelines:
 - If the document content doesn't contain information to answer a question, say so clearly
 - Quote relevant passages when helpful
 - If the user just uploads a document without a specific question, provide a helpful summary of what the document contains"""
-            }
-        ]
+
+        messages = []
         messages.extend(conversation_history)
         messages.append({"role": "user", "content": context_prompt})
 
-        print(f"DEBUG: Calling OpenAI Chat Completions API...")
-        openai_client = get_openai_client()
-        response = openai_client.chat.completions.create(
-            model="gpt-4",
+        print(f"DEBUG: Calling Anthropic Messages API...")
+        anthropic_client = get_anthropic_client()
+        response = anthropic_client.messages.create(
+            model=get_active_model(),
+            system=system_prompt,
             messages=messages,
             temperature=0.7,
             max_tokens=1500
         )
 
-        response_text = f"[Chopper]: {response.choices[0].message.content}"
+        response_text = f"[Chopper]: {extract_anthropic_text(response)}"
 
         # Build citations from retrieved metadata
         citations = []
@@ -1238,6 +1299,20 @@ Guidelines:
             response_data['processing_errors'] = processing_errors
             print(f"DEBUG: Document processing errors: {processing_errors}")
 
+        log_bridge_event(
+            source="app",
+            event="chat_with_document_response",
+            session_id=session_id,
+            user_id=user_id,
+            model=get_active_model(),
+            detail=response_text,
+            extra={
+                "duration_ms": int((time.time() - start_time) * 1000),
+                "documents_processed": len(processed_doc_ids),
+                "retrieved_chunk_count": len(retrieved_chunks),
+                "processing_error_count": len(processing_errors)
+            }
+        )
         return jsonify(response_data)
 
     except Exception as e:
@@ -1245,7 +1320,29 @@ Guidelines:
         print(f"ERROR in chat-with-document endpoint: {e}")
         import traceback
         traceback.print_exc()
+        log_bridge_event(
+            source="app",
+            event="chat_with_document_error",
+            status="error",
+            session_id=session_id,
+            user_id=user_id,
+            model=get_active_model(),
+            message=user_message,
+            detail=str(e)
+        )
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+
+
+@app.route('/api/logs/bridge', methods=['GET'])
+@login_required
+def get_bridge_logs():
+    """Read shared Telegram/App bridge logs."""
+    try:
+        limit = request.args.get('limit', 200, type=int)
+        result = read_bridge_logs(limit=limit)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': f'Failed to read logs: {str(e)}'}), 500
 
 
 # =============================================================================
