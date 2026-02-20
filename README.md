@@ -71,3 +71,39 @@ python3 telegram_bot.py
 - Document embeddings are generated locally via SentenceTransformers.
 - Chroma stores chunk vectors and metadata for retrieval and citation.
 - Support chat remains separate from AI assistant chat.
+
+## Autonomy Layer (Alex)
+
+Alex is an optional autonomous agent subsystem that runs as a separate Node.js process.
+It is disabled by default and does not affect the Flask app unless explicitly enabled.
+
+### Enable
+
+Set in `.env`:
+```env
+AUTONOMY_ENABLED=true
+```
+
+### Start
+
+```bash
+npm run agent
+```
+
+For local testing with forced enable:
+```bash
+npm run agent:dev
+```
+
+Health endpoint:
+```bash
+curl -s http://localhost:3100/health
+```
+
+### Safety guarantees
+
+- Feature-flagged: no autonomous runtime unless `AUTONOMY_ENABLED=true`.
+- No direct shell execution in `ralph.js` or `tools.js`.
+- Outbound auto-send blocked unless `RALPH_AUTOSEND=true`.
+- Writes are restricted to project `logs/` and `instance/`.
+- Subsystems degrade gracefully: failures are logged and isolated.

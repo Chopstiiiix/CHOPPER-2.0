@@ -1,0 +1,10 @@
+# CHOPPER Autonomous Agent - Cron Jobs
+# Install via: scripts/setup_cron.sh
+# DO NOT install manually — use the setup script for idempotent installation
+
+*/5 * * * * cd /opt/chopper && node src/heartbeat.js --once >> logs/heartbeat.log 2>&1
+0 * * * * cd /opt/chopper && bash Alex-Scripts/system-scan.sh >> logs/system-scan.log 2>&1
+0 6 * * * cd /opt/chopper && python3 Alex-Scripts/daily-summary.py >> logs/daily-summary.log 2>&1
+0 0 * * * cd /opt/chopper && bash Alex-Scripts/update-changelog.sh >> logs/changelog-update.log 2>&1
+0 3 * * * cd /opt/chopper && bash Alex-Scripts/update-json-index.sh >> logs/index-update.log 2>&1
+@reboot cd /opt/chopper && bash Alex-Scripts/taildrop-watcher.sh >> logs/taildrop.log 2>&1 &

@@ -1,0 +1,11 @@
+/home/opc/CHOPPER-2.0/logs/*.log {
+    daily
+    rotate 7
+    maxsize 10M
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 644 opc opc
+    copytruncate
+}

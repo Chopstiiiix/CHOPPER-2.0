@@ -62,3 +62,16 @@ login_cookies.txt
 # Scripts with secrets (do not commit)
 set_vercel_env.sh
 setup_vercel_env.sh
+
+# Agent autonomy layer
+instance/agent-memory.json
+instance/incoming/
+logs/inbox-queue.json
+logs/*.log
+
+# Playwright
+tests/e2e/report/
+tests/e2e/results/
+test-results/
+playwright-report/
+blob-report/

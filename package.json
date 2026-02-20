@@ -1,8 +1,25 @@
 {
+  "scripts": {
+    "agent": "node src/gateway.js",
+    "agent:dev": "AUTONOMY_ENABLED=true node src/gateway.js",
+    "health": "curl -s http://localhost:3100/health | jq .",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test:e2e:flask": "npx playwright test --project=flask-ui",
+    "test:e2e:agent": "npx playwright test --project=agent-api",
+    "test:e2e:api": "npx playwright test --project=api-only",
+    "test:e2e:report": "npx playwright show-report tests/e2e/report"
+  },
   "dependencies": {
     "@prisma/client": "^6.16.2",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "node-cron": "^3.0.3",
     "prisma": "^6.16.2",
     "sqlite-web": "^0.1.1-alpha.0",
     "three": "^0.181.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
   }
 }

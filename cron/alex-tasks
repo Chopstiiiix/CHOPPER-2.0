@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "tasks": [
+    {"name":"heartbeat-check","cron":"*/5 * * * *","handler":"heartbeat.pulse","enabled":true},
+    {"name":"system-scan","cron":"0 * * * *","handler":"tools.invoke:system-status","enabled":true},
+    {"name":"daily-summary","cron":"0 6 * * *","handler":"skills.execute:daily-summary","enabled":true},
+    {"name":"inbox-process","cron":"*/2 * * * *","handler":"ralph.processNext","enabled":true},
+    {"name":"memory-save","cron":"*/10 * * * *","handler":"memory.save","enabled":true},
+    {"name":"log-review","cron":"0 12 * * *","handler":"skills.execute:log-review","enabled":true}
+  ]
+}

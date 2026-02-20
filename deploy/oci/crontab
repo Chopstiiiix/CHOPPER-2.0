@@ -1,0 +1,10 @@
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+
+*/5 * * * * cd /home/opc/CHOPPER-2.0 && node src/heartbeat.js --once >> logs/heartbeat.log 2>&1
+0 * * * * cd /home/opc/CHOPPER-2.0 && bash Alex-Scripts/system-scan.sh >> logs/system-scan.log 2>&1
+0 6 * * * cd /home/opc/CHOPPER-2.0 && python3 Alex-Scripts/daily-summary.py >> logs/daily-summary.log 2>&1
+0 0 * * * cd /home/opc/CHOPPER-2.0 && bash Alex-Scripts/update-changelog.sh >> logs/changelog-update.log 2>&1
+0 3 * * * cd /home/opc/CHOPPER-2.0 && bash Alex-Scripts/update-json-index.sh >> logs/index-update.log 2>&1
+0 2 * * * /usr/sbin/logrotate -f /home/opc/CHOPPER-2.0/deploy/logrotate-alex >> /home/opc/CHOPPER-2.0/logs/logrotate.log 2>&1
+*/10 * * * * curl -fsS http://127.0.0.1:3100/health >/dev/null || echo "[$(date -u +\%Y-\%m-\%dT\%H:\%M:\%SZ)] [OCI] gateway unhealthy" >> /home/opc/CHOPPER-2.0/logs/oci-health.log
